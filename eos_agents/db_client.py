@@ -4,6 +4,9 @@ db_api_client: Routines to call to the DB API
 The most recent HTTP result code is held in the variable "last_status", which
 is initially set to -1. 
 """
+
+import requests
+
 class DBSession():
     """
     
@@ -13,27 +16,16 @@ class DBSession():
         
         """
         self.last_status = -1
-        pass
     
-    def get_next_pre_stop(self):
+    def get_triggers(self, trigger):
+        """Gets a list of all servers in the trigger state specified.
+                
+        :param trigger: Plaintext of the trigger which we are searching for.
+        :returns: List of vm ids.
         """
-        """
-        return vm_id
-    
-    def get_next_pre_start(self):
-        """
-        """
-        return vm_id
-    
-    def get_next_pre_reset(self):
-        """
-        """
-        return vm_id
-    
-    def get_next_pre_decommission(self):
-        """
-        """
-        return vm_id
+        r = requests.get('http://localhost:6543/states?state=' + trigger)
+        serverlist = r.keys
+        return serverlist
     
     def set_state(self, vm_id, state_id):
         """

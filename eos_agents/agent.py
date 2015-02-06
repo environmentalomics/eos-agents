@@ -21,6 +21,27 @@ class Agent():
         self.actions = actions
         self.success_state = success_state
         self.error_state = error_state
+
+    def get_triggers(self):
+        server_list = updates.get_triggers(self.trigger)
+        return server_list
+    
+    def set_status(self, server, status):
+        result = updates.set_status(server, status)
+        return result
+    
+    def get_status(self, server_id):
+        """
+        Get latest status of vCloud action pushed to Director.
+        
+        Assumes that a job id has been assigned to the server.
+        """
+        result = actions.get_status(server_progress[server]['job_id'])
+        return result
+
+    def run2(self):
+        
+    
         
     def run(self):
         """
@@ -41,39 +62,24 @@ class Agent():
         """
         server_progress = {}
         while True:
-            for server in get_triggers():
+            triggers = self.get_triggers()
+            for server in triggers:
                 sleep(0)
                 if server in server_progress:
-                    if get_status(server_progress[server]) == 100:
+                    if self.get_status(server_progress[server]) == 100:
                         server_progress[server] += 1
                         if self.functions[server_progress[server]]:
                             result = self.functions[server_progress[server]]
                             if result == -1:
-                                set_status(server, self.error_status)
+                                self.set_status(server, self.error_status)
                         else:
-                            set_status(server, self.success_status)
+                            self.set_status(server, self.success_status)
                 else:
                     server_progress[server] = 0
                     result = self.functions[server_progress[server]]
                     if result == -1:
-                        set_status(server, self.error_status)
+                        self.set_status(server, self.error_status)
             
-        def get_triggers():
-            server_list = updates.get_triggers(self.trigger)
-            return server_list
-        
-        def set_status(server, status):
-            result = updates.set_status(server, status)
-            return result
-        
-        def get_status(server_id):
-            """
-            Get latest status of vCloud action pushed to Director.
-            
-            Assumes that a job id has been assigned to the server.
-            """
-            result = actions.get_status(server_progress[server]['job_id'])
-            return result
 
 class Start(Agent):
     """
@@ -81,7 +87,7 @@ class Start(Agent):
     them, before setting their status to "Started".
     """
     def __init__(self):
-        Agent.__init__("Pre-Start", [actions.start_vm], "Started", "Error (Start)")
+        Agent.__init__(self, "Pre-Start", [actions.start_vm], "Started", "Error (Start)")
     
 class Stop(Agent):
     """
@@ -89,7 +95,7 @@ class Stop(Agent):
     before setting their status to "Stopped".
     """
     def __init__(self):
-        Agent.__init__("Pre-Stop", [actions.stop_vm], "Stopped", "Error (Stop)")
+        Agent.__init__(self, "Pre-Stop", [actions.stop_vm], "Stopped", "Error (Stop)")
 
 class Boost(Agent):
     def __init__(self):
