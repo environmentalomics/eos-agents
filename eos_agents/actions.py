@@ -6,8 +6,8 @@ on the vCloud environment via the vCloud API. This module is exclusively aimed
 at interfacing with vCloud.
 """
 
-from eos_agents.vc_client import VCSession
-from eos_agents.settings import VCDetails as VCD
+from vc_client import VCSession
+from settings import VCDetails as VCD
 
 def start_vm(vm_id):
     """

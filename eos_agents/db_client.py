@@ -27,10 +27,14 @@ class DBSession():
         serverlist = r.keys
         return serverlist
     
+    def get_prestart_item(self):
+        r = requests.get('http://localhost:6543/states/Starting?state=Starting')
+        return r.text
+    
     def set_state(self, vm_id, state_id):
         """
         """
-        return status
+        return None
     
     def kill(self):
         """

@@ -1,4 +1,4 @@
-from eos_agents import actions, updates
+import actions, updates, db_client
 from time import sleep
 
 class Agent():
@@ -38,10 +38,33 @@ class Agent():
         """
         result = actions.get_status(server_progress[server]['job_id'])
         return result
-
-    def run2(self):
-        
     
+    def lookup_uuid(self, id):
+        if id == '2':
+            return 'vm-99d7ee8d-69a2-4eaa-a332-11b5413ca827'
+        return None
+    
+    def startservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_prestart_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    actions.start_vm(serveruuid)
+                    session.set_state(vm_id, "Started") #Needs doing
+            sleep(20000)
+        
+    def stopservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_prestop_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    actions.stop_vm(serveruuid)
+                    session.set_state(vm_id, "Stopped") #Needs doing
+            sleep(20000)
         
     def run(self):
         """
