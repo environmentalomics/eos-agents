@@ -35,9 +35,18 @@ class DBSession():
         r = requests.get('http://localhost:6543/states/Stopping?state=Stopping')
         return r.text
     
-    def set_state(self, vm_id, state_id):
+    def set_state_to_stopped(self, vm_id):
         """
+        
         """
+        r = requests.post('http://localhost:6543/servers/asdf/stopped', data={"vm_id":vm_id})
+        return None
+    
+    def set_state_to_started(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/started', data={"vm_id":vm_id})
         return None
     
     def kill(self):

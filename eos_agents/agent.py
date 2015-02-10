@@ -40,8 +40,12 @@ class Agent():
         return result
     
     def lookup_uuid(self, id):
-        if id == '2':
+        if id == '1':
             return 'vm-99d7ee8d-69a2-4eaa-a332-11b5413ca827'
+        if id == '2':
+            return 'asd'
+        if id == '3':
+            return 'asd'
         return None
     
     def startservice(self):
@@ -53,7 +57,7 @@ class Agent():
                 if serveruuid != None:
                     actions.start_vm(serveruuid)
                     session.set_state(vm_id, "Started") #Needs doing
-            sleep(20000)
+            sleep(5)
         
     def stopservice(self):
         session = db_client.DBSession('roger','asdf')
@@ -64,7 +68,7 @@ class Agent():
                 if serveruuid != None:
                     actions.stop_vm(serveruuid)
                     session.set_state(vm_id, "Stopped") #Needs doing
-            sleep(20000)
+            sleep(5)
         
     def run(self):
         """
