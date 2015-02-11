@@ -73,6 +73,14 @@ class VCSession:
         """
         
         """
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown", 
+                          data=None, 
+                          headers=self.headers,
+                          verify=False)
+        self.last_status = r.status_code
+        root = ET.fromstring(r.content)
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
         
     def list_vapps(self):
         payload = {"page": "1", "pageSize":"25", "format":"idrecords"}

@@ -55,8 +55,11 @@ class Agent():
             if vm_id != None:
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
-                    actions.start_vm(serveruuid)
-                    session.set_state(vm_id, "Started") #Needs doing
+                    try:
+                        actions.start_vm(serveruuid)
+                        session.set_state(vm_id, "Started") #Needs doing
+                    except:
+                        pass
             sleep(5)
         
     def stopservice(self):
@@ -66,8 +69,11 @@ class Agent():
             if vm_id != None:
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
-                    actions.stop_vm(serveruuid)
-                    session.set_state(vm_id, "Stopped") #Needs doing
+                    try:
+                        actions.stop_vm(serveruuid)
+                        session.set_state(vm_id, "Stopped") #Needs doing
+                    except:
+                        pass
             sleep(5)
         
     def run(self):
