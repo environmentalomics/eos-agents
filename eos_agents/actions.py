@@ -39,17 +39,22 @@ def poweroff_vm(vm_id):
     session.kill()
     return session.last_status, session.last_job_id
 
-def boost_vm(session_token, vm_id):
+def boost_vm_memory(vm_id, ram):
     """
     
     """
-    pass
+    session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
+    session.set_system_memory_config(vm_id, 8)
+    session.kill()
+    return session.last_status, session.last_job_id
 
-def get_status(vm_id):
+def get_status(job_id):
     """
     
     """
-    session = get_session
-    pass
+    session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
+    job_status = session.get_task_status(job_id)
+    session.kill()
+    return job_status
 
     

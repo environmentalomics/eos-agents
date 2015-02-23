@@ -81,6 +81,27 @@ class VCSession:
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
+    
+    def set_system_memory_config(self, vapp_id, ram):
+        tree = ET.parse("templates/memory.xml")
+        root = tree.getroot()
+        xmlstring = ET.tostring(root, encoding='utf8', method='xml')
+        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory", data=xmlstring, headers=self.headers, verify=False)
+        root = ET.fromstring(response.content)
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
+    
+    def set_system_cpu_config(self, vapp_id, ram):
+        tree = ET.parse("templates/memory.xml")
+        root = tree.getroot()
+        xmlstring = ET.tostring(root, encoding='utf8', method='xml')
+        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory", data=xmlstring, headers=self.headers)
+        root = ET.fromstring(response.content)
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
+    
+    def boost_vm(self):
+        pass
         
     def list_vapps(self):
         payload = {"page": "1", "pageSize":"25", "format":"idrecords"}
@@ -94,7 +115,20 @@ class VCSession:
         return response.text
     
     def get_task_status(self, task_id):
-        "Returns current status of a given job in vCloud Director"
+        """Returns current status of a given job in vCloud Director.
+        
+        This will be one of:
+        
+            * queued - The task has been queued for execution.
+            * preRunning - The task is awaiting preprocessing or, if it is a
+              blocking task, administrative action. 
+            * running - The task is runnning.
+            * success - The task completed with a status of success.
+            * error - The task encountered an error while running.
+            * canceled - The task was canceled by the owner or an administrator.
+            * aborted - The task was aborted by an administrative action.
+             
+        """
         response = requests.get(self.endpoint + "/task/" + task_id, data=None, headers=self.headers,
                           verify=False)
         root = ET.fromstring(response.content)

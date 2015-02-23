@@ -41,9 +41,9 @@ class Agent():
     
     def lookup_uuid(self, id):
         if id == '1':
-            return 'vm-99d7ee8d-69a2-4eaa-a332-11b5413ca827'
-        if id == '2':
             return 'asd'
+        if id == '2':
+            return 'vm-99d7ee8d-69a2-4eaa-a332-11b5413ca827'
         if id == '3':
             return 'asd'
         return None
@@ -56,10 +56,11 @@ class Agent():
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
                     try:
-                        actions.start_vm(serveruuid)
-                        session.set_state(vm_id, "Started") #Needs doing
+                        status, job_id = actions.start_vm(serveruuid)
+                        self.wait_on_job(job_id)
+                        session.set_state_to_started(vm_id)
                     except:
-                        pass
+                        print "Server UUID not found"
             sleep(5)
         
     def stopservice(self):
@@ -70,11 +71,51 @@ class Agent():
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
                     try:
-                        actions.stop_vm(serveruuid)
-                        session.set_state(vm_id, "Stopped") #Needs doing
+                        status, job_id = actions.stop_vm(serveruuid)
+                        print ("Stopping vm: " + serveruuid + ". Job: " + job_id + '. HTTP result ' + status + '.')
+                        self.wait_on_job(job_id)
+                        session.set_state_to_stopped(vm_id)
                     except:
                         pass
             sleep(5)
+    
+    def prepareservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_prepare_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        status, job_id =  actions.stop_vm(serveruuid)
+                        self.wait_on_job(job_id)
+                        session.set_state_to_prepared(vm_id)
+                    except:
+                        print "Server UUID not found"
+            sleep(5)
+    
+    def boostservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_boost_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        ram = 8
+                        session.set_state_to_boosting(vm_id)
+                        status, job_id = actions.boost_vm_memory(serveruuid, ram)
+                        print ("Boosting vm: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        self.wait_on_job(job_id)
+                        session.set_state_to_starting(vm_id)
+                    except:
+                        print "Server UUID not found"
+            sleep(5)
+    
+    def wait_on_job(self, job_id):
+        status = ""
+        while status not in ['success', 'error', 'canceled', 'aborted']:
+            status = actions.get_status(job_id)
         
     def run(self):
         """

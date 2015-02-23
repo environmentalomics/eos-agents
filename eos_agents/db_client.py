@@ -35,6 +35,17 @@ class DBSession():
         r = requests.get('http://localhost:6543/states/Stopping?state=Stopping')
         return r.text
     
+    def get_prepare_item(self):
+        r = requests.get('http://localhost:6543/states/Preparing?state=Preparing')
+        return r.text
+    
+    def get_prepared_item(self):
+        pass
+    
+    def get_boost_item(self):
+        r = requests.get('http://localhost:6543/states/prepared?state=Prepared')
+        return r.text
+        
     def set_state_to_stopped(self, vm_id):
         """
         
@@ -47,6 +58,27 @@ class DBSession():
         
         """
         r = requests.post('http://localhost:6543/servers/asdf/started', data={"vm_id":vm_id})
+        return None
+    
+    def set_state_to_prepared(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/prepared', data={"vm_id":vm_id})
+        return None
+    
+    def set_state_to_starting(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/start', data={"vm_id":vm_id})
+        return None
+    
+    def set_state_to_boosting(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/boost', data={"vm_id":vm_id})
         return None
     
     def kill(self):
