@@ -5,7 +5,7 @@ The most recent HTTP result code is held in the variable "last_status", which
 is initially set to -1. 
 """
 
-import requests
+import requests, json
 
 class DBSession():
     """
@@ -80,6 +80,12 @@ class DBSession():
         """
         r = requests.post('http://localhost:6543/servers/asdf/boost', data={"vm_id":vm_id})
         return None
+    
+    def get_latest_specification(self, vm_id):
+        r = requests.get('http://localhost:6543/servers/by_id/' + str(vm_id))
+        vm_name = json.loads(r.text)['artifact_uuid']
+        r = requests.get('http://localhost:6543/servers/' + vm_name + '/specification')
+        return json.loads(r.text)['cores'], json.loads(r.text)['ram']
     
     def kill(self):
         """

@@ -102,11 +102,19 @@ class Agent():
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
                     try:
-                        ram = 8
+                        cores, ram = session.get_latest_specification(vm_id)
+                        print("Latest spec: " + str(cores) + " cores, " + str(ram) + "GB RAM.")
+                                                
                         session.set_state_to_boosting(vm_id)
+                        
                         status, job_id = actions.boost_vm_memory(serveruuid, ram)
-                        print ("Boosting vm: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        print ("Boosting vm RAM: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
                         self.wait_on_job(job_id)
+                        
+                        status, job_id = actions.boost_vm_cpu(serveruuid, cores)
+                        print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        self.wait_on_job(job_id)
+                        
                         session.set_state_to_starting(vm_id)
                     except:
                         print "Server UUID not found"
