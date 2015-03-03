@@ -1,1 +1,8 @@
-# Set up all agent threads
+"""
+
+"""
+
+class Control():
+    
+    def start(self):
+        pass

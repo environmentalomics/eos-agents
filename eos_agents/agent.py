@@ -111,14 +111,85 @@ class Agent():
                         print ("Boosting vm RAM: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
                         self.wait_on_job(job_id)
                         
-                        status, job_id = actions.boost_vm_cpu(serveruuid, cores)
-                        print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
-                        self.wait_on_job(job_id)
+                        #status, job_id = actions.boost_vm_cores(serveruuid, cores)
+                        #print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        #self.wait_on_job(job_id)
                         
                         session.set_state_to_starting(vm_id)
                     except:
                         print "Server UUID not found"
             sleep(5)
+    
+    def rebaseserver(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_auto_deboost_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        pass
+                        # Deboost
+                    except:
+                        print "Server UUID not found"
+    
+    def autodeboostservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_auto_deboost_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        pass
+                        # Deboost
+                    except:
+                        print "Server UUID not found"
+            sleep(5)
+    
+    def predeboostservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_predeboost_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        status, job_id =  actions.stop_vm(serveruuid)
+                        self.wait_on_job(job_id)
+                        session.set_state_to_predeboosted(vm_id)
+                    except:
+                        print "Server UUID not found"
+            sleep(5)
+    
+    def deboostservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_deboost_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        cores = 1
+                        ram = 16
+                        print("Latest spec: " + str(cores) + " cores, " + str(ram) + "GB RAM.")
+                                                
+                        session.set_state_to_deboosting(vm_id)
+                        
+                        status, job_id = actions.boost_vm_memory(serveruuid, ram)
+                        print ("Deboosting vm RAM: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        self.wait_on_job(job_id)
+                        name = session.get_name(vm_id)
+                        
+                        session.set_specification(name,1,16)
+                        #status, job_id = actions.boost_vm_cores(serveruuid, cores)
+                        #print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
+                        #self.wait_on_job(job_id)
+                        
+                        session.set_state_to_starting(vm_id)
+                    except:
+                        print "Server UUID not found"
+            sleep(5) 
     
     def wait_on_job(self, job_id):
         status = ""

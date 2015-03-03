@@ -83,7 +83,16 @@ class VCSession:
         return root.attrib['id']
     
     def set_system_memory_config(self, vapp_id, ram):
-        tree = ET.parse("templates/memory.xml")
+        if ram == 16:
+                tree = ET.parse("templates/16gb_memory.xml")
+        elif ram == 40:
+                tree = ET.parse("templates/40gb_memory.xml")
+        elif ram == 140:
+                tree = ET.parse("templates/140gb_memory.xml")
+        elif ram == 500:
+                tree = ET.parse("templates/500gb_memory.xml")
+        else:
+                tree = ET.parse("templates/16gb_memory.xml")
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
         response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory", data=xmlstring, headers=self.headers, verify=False)
@@ -91,11 +100,20 @@ class VCSession:
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
     
-    def set_system_cpu_config(self, vapp_id, ram):
-        tree = ET.parse("templates/memory.xml")
+    def set_system_cpu_config(self, vapp_id, cores):
+        if cores == 1:
+                tree = ET.parse("templates/1_core.xml")
+        elif cores == 2:
+                tree = ET.parse("templates/2_cores.xml")
+        elif cores == 8:
+                tree = ET.parse("templates/8_cores.xml")
+        elif cores == 16:
+                tree = ET.parse("templates/16_cores.xml")
+        else:
+                tree = ET.parse("templates/1_core.xml")
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory", data=xmlstring, headers=self.headers)
+        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/cpu", data=xmlstring, headers=self.headers, verify=False)
         root = ET.fromstring(response.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']

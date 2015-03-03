@@ -44,9 +44,19 @@ def boost_vm_memory(vm_id, ram):
     
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
-    session.set_system_memory_config(vm_id, 8)
+    session.set_system_memory_config(vm_id, ram)
     session.kill()
     return session.last_status, session.last_job_id
+
+def boost_vm_cores(vm_id, cores):
+    """
+    
+    """
+    session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
+    session.set_system_cpu_config(vm_id, cores)
+    session.kill()
+    return session.last_status, session.last_job_id
+
 
 def get_status(job_id):
     """

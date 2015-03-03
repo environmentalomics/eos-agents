@@ -45,6 +45,43 @@ class DBSession():
     def get_boost_item(self):
         r = requests.get('http://localhost:6543/states/prepared?state=Prepared')
         return r.text
+    
+    def get_auto_deboost_item(self):
+        r = requests.get('http://localhost:6543/states/boostexpired')
+        return r.text
+        
+    def get_manual_deboost_item(self):
+        r = requests.get('http://localhost:6543/states/deboosting?state=Deboosting')
+        return r.text
+    
+    def get_predeboost_item(self):
+        r = requests.get('http://localhost:6543/states/pre_deboosting?state=Pre_Deboosting')
+        return r.text
+    
+    def set_state_to_predeboosted(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/pre_deboosted', data={"vm_id":vm_id})
+        return None
+    
+    def set_state_to_deboosting(self, vm_id):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/Deboosting', data={"vm_id":vm_id})
+        return None
+        
+    def get_deboost_item(self):
+        r = requests.get('http://localhost:6543/states/Pre_Deboosted?state=Pre_Deboosted')
+        return r.text
+        
+    def set_state_to_deboosted(self):
+        """
+        
+        """
+        r = requests.post('http://localhost:6543/servers/asdf/deboosted', data={"vm_id":vm_id})
+        return None
         
     def set_state_to_stopped(self, vm_id):
         """
@@ -67,6 +104,10 @@ class DBSession():
         r = requests.post('http://localhost:6543/servers/asdf/prepared', data={"vm_id":vm_id})
         return None
     
+    def get_name(self,vm_id):
+        r = requests.get('http://localhost:6543/servers/by_id/2')
+        return json.loads(r.text)['artifact_uuid']
+    
     def set_state_to_starting(self, vm_id):
         """
         
@@ -86,6 +127,9 @@ class DBSession():
         vm_name = json.loads(r.text)['artifact_uuid']
         r = requests.get('http://localhost:6543/servers/' + vm_name + '/specification')
         return json.loads(r.text)['cores'], json.loads(r.text)['ram']
+    
+    def set_specification(self, vm_name, cores, ram):
+        r = requests.post('http://localhost:6543/servers/' + vm_name + '/specification', data={"vm_id":vm_name, "cores": cores, "ram": ram})
     
     def kill(self):
         """
