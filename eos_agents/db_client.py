@@ -105,7 +105,7 @@ class DBSession():
         return None
     
     def get_name(self,vm_id):
-        r = requests.get('http://localhost:6543/servers/by_id/2')
+        r = requests.get('http://localhost:6543/servers/by_id/' + str(vm_id))
         return json.loads(r.text)['artifact_uuid']
     
     def set_state_to_starting(self, vm_id):
