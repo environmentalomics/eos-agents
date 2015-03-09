@@ -62,6 +62,21 @@ class Agent():
                     except:
                         print "Server UUID not found"
             sleep(5)
+    
+    def restartservice(self):
+        session = db_client.DBSession('roger','asdf')
+        while True:
+            vm_id = session.get_restart_item()
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    try:
+                        status, job_id = actions.restart_vm(serveruuid)
+                        self.wait_on_job(job_id)
+                        session.set_state_to_started(vm_id)
+                    except:
+                        print "Server UUID not found"
+            sleep(5)
         
     def stopservice(self):
         session = db_client.DBSession('roger','asdf')

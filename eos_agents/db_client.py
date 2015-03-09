@@ -31,6 +31,10 @@ class DBSession():
         r = requests.get('http://localhost:6543/states/Starting?state=Starting')
         return r.text
     
+    def get_restart_item(self):
+        r = requests.get('http://localhost:6543/states/Restarting?state=Restarting')
+        return r.text
+    
     def get_prestop_item(self):
         r = requests.get('http://localhost:6543/states/Stopping?state=Stopping')
         return r.text

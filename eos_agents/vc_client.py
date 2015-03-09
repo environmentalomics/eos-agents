@@ -43,6 +43,19 @@ class VCSession:
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
     
+    def restart_vm(self, vm_id):
+        """
+        Attempts to start a vm given by vm_id.
+        """
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/reboot", 
+                          data=None, 
+                          headers=self.headers,
+                          verify=False)
+        self.last_status = r.status_code
+        root = ET.fromstring(r.content)
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
+    
     def poweroff_vm(self, vm_id):
         """
         Attempts to start a vm given by vm_id.
