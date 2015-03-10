@@ -1,6 +1,16 @@
 import actions, updates, db_client
 from time import sleep
 
+def get_latest_specification(self):
+    """
+    """
+    pass
+
+def set_state_to_boosting(self):
+    """
+    """
+    pass
+
 class Agent():
     """
     An agent performs activities within the system as follows:
@@ -16,19 +26,17 @@ class Agent():
     perform on the artifact identified.
     
     """
-    def __init__(self, trigger, actions, success_state, error_state):
-        self.trigger = trigger
-        self.actions = actions
+    def __init__(self, trigger_state, action_list, success_state, error_state):
+        self.trigger_state = trigger_state
+        self.action_list = action_list
         self.success_state = success_state
         self.error_state = error_state
-
-    def get_triggers(self):
-        server_list = updates.get_triggers(self.trigger)
-        return server_list
     
-    def set_status(self, server, status):
-        result = updates.set_status(server, status)
-        return result
+    def wait_on_job(self, job_id):
+        status = ""
+        while status not in ['success', 'error', 'canceled', 'aborted']:
+            status = actions.get_status(job_id)
+        return status
     
     def get_status(self, server_id):
         """
@@ -48,237 +56,59 @@ class Agent():
             return 'asd'
         return None
     
-    def startservice(self):
-        session = db_client.DBSession('roger','asdf')
+    def dwell(self):
         while True:
-            vm_id = session.get_prestart_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        status, job_id = actions.start_vm(serveruuid)
-                        self.wait_on_job(job_id)
-                        session.set_state_to_started(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-    
-    def restartservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_restart_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        status, job_id = actions.restart_vm(serveruuid)
-                        self.wait_on_job(job_id)
-                        session.set_state_to_started(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-        
-    def stopservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_prestop_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        status, job_id = actions.stop_vm(serveruuid)
-                        print ("Stopping vm: " + serveruuid + ". Job: " + job_id + '. HTTP result ' + status + '.')
-                        self.wait_on_job(job_id)
-                        session.set_state_to_stopped(vm_id)
-                    except:
-                        pass
-            sleep(5)
-    
-    def prepareservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_prepare_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        status, job_id =  actions.stop_vm(serveruuid)
-                        self.wait_on_job(job_id)
-                        session.set_state_to_prepared(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-    
-    def boostservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_boost_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        cores, ram = session.get_latest_specification(vm_id)
-                        print("Latest spec: " + str(cores) + " cores, " + str(ram) + "GB RAM.")
-                                                
-                        session.set_state_to_boosting(vm_id)
-                        
-                        status, job_id = actions.boost_vm_memory(serveruuid, ram)
-                        print ("Boosting vm RAM: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
-                        self.wait_on_job(job_id)
-                        
-                        #status, job_id = actions.boost_vm_cores(serveruuid, cores)
-                        #print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
-                        #self.wait_on_job(job_id)
-                        
-                        session.set_state_to_starting(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-    
-    def rebaseserver(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_auto_deboost_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        pass
-                        # Deboost
-                    except:
-                        print "Server UUID not found"
-    
-    def autodeboostservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_auto_deboost_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        pass
-                        # Deboost
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-    
-    def predeboostservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_predeboost_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        status, job_id =  actions.stop_vm(serveruuid)
-                        self.wait_on_job(job_id)
-                        session.set_state_to_predeboosted(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5)
-    
-    def deboostservice(self):
-        session = db_client.DBSession('roger','asdf')
-        while True:
-            vm_id = session.get_deboost_item()
-            if vm_id != None:
-                serveruuid = self.lookup_uuid(vm_id)
-                if serveruuid != None:
-                    try:
-                        cores = 1
-                        ram = 16
-                        print("Latest spec: " + str(cores) + " cores, " + str(ram) + "GB RAM.")
-                                                
-                        session.set_state_to_deboosting(vm_id)
-                        
-                        status, job_id = actions.boost_vm_memory(serveruuid, ram)
-                        print ("Deboosting vm RAM: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
-                        self.wait_on_job(job_id)
-                        name = session.get_name(vm_id)
-                        
-                        session.set_specification(name,1,16)
-                        #status, job_id = actions.boost_vm_cores(serveruuid, cores)
-                        #print ("Boosting vm CPU: " + str(serveruuid) + ". Job: " + str(job_id) + '. HTTP result ' + str(status) + '.')
-                        #self.wait_on_job(job_id)
-                        
-                        session.set_state_to_starting(vm_id)
-                    except:
-                        print "Server UUID not found"
-            sleep(5) 
-    
-    def wait_on_job(self, job_id):
-        status = ""
-        while status not in ['success', 'error', 'canceled', 'aborted']:
-            status = actions.get_status(job_id)
-        
-    def run(self):
-        """
-        This is the main loop which operates the agent, checking for triggers
-        and executing API calls.
-        
-        Each time the loop repeats, the agent queries the DB API for a list of
-        servers in the appropriate trigger state.
-        
-        If it already knows about the server, it will attempt to get an update
-        on progress from the vCloud API, and move to the next function if that
-        previous function was completed.
-        
-        If all functions are completed, it will update the DB API with its
-        success state. If an error occurs at any point, it will set the
-        DB API state of the VM to the given error state.
-        
-        """
-        server_progress = {}
-        while True:
-            triggers = self.get_triggers()
-            for server in triggers:
-                sleep(0)
-                if server in server_progress:
-                    if self.get_status(server_progress[server]) == 100:
-                        server_progress[server] += 1
-                        if self.functions[server_progress[server]]:
-                            result = self.functions[server_progress[server]]
-                            if result == -1:
-                                self.set_status(server, self.error_status)
-                        else:
-                            self.set_status(server, self.success_status)
-                else:
-                    server_progress[server] = 0
-                    result = self.functions[server_progress[server]]
-                    if result == -1:
-                        self.set_status(server, self.error_status)
             
-
-class Start(Agent):
-    """
-    The Start Agent looks for devices in a state of "Pre-Start" and starts
-    them, before setting their status to "Started".
-    """
-    def __init__(self):
-        Agent.__init__(self, "Pre-Start", [actions.start_vm], "Started", "Error (Start)")
+            # Open DB Connection
+            session = db_client.DBSession()
+            
+            # Look for Machines in target state
+            vm_id = session.get_machine_in_state(self.trigger_state)
+            if vm_id != None:
+                serveruuid = self.lookup_uuid(vm_id)
+                if serveruuid != None:
+                    print "Found action for server " + vm_id
+                    for job in self.action_list:
+                        
+                        status_code, job_id = job(serveruuid) # Execute VM action
+                        print "Waiting for response"
+                        status = self.wait_on_job(job_id) # Wait for job to complete
+                        
+                        if status == "success":
+                            print "Success"
+                            session.set_state(vm_id, self.success_state)    # Perform success action
+                        elif status == "error":
+                            print "Error"        # Flag machine as "alert" and return to previous state
+                        elif status == "canceled":
+                            print "Cancelled"    # Return machine state to previous state
+                        elif status == "aborted":
+                            print "Aborted"      # Return machine state to previous state
+                        else:
+                            print "Error: Status=" + str(status)
+            sleep(5)
     
-class Stop(Agent):
-    """
-    The Stop Agent looks for devices in a state of "Pre-Stop" and stops them,
-    before setting their status to "Stopped".
-    """
-    def __init__(self):
-        Agent.__init__(self, "Pre-Stop", [actions.stop_vm], "Stopped", "Error (Stop)")
+"""
 
-class Boost(Agent):
-    def __init__(self):
-        Agent.__init__("Pre-Boost", 
-                       [actions.stop_vm, 
-                        actions.boost_vm, 
-                        actions.start_vm], 
-                       "Boosted", 
-                       "Error (Boost)")
+Start : Working
+Stop: Working
+Restart: Not Working
+Prepare: -
+Pre-Deboost: - 
 
-class Provision(Agent):
-    pass
-    
-class Delete(Agent):
-    pass
-    
-class Check(Agent):    
-    pass
+prepare_agent = Agent("Preparing", [actions.stop_vm], "Prepared", "Started")
+predeboost_agent = Agent("Pre_Deboosting", [actions.stop_vm], "Pre_Deboosted", "Started")
+
+boost_agent = Agent("Prepared", [get_latest_specification,
+                                 set_state_to_boosting,
+                                 actions.boost_vm_memory,
+                                 actions.boost_vm_cores,
+                                 ], "Starting")
+
+deboost_agent = Agent("Deboosting", [get_latest_specification,
+                                 set_state_to_boosting,
+                                 actions.boost_vm_memory,
+                                 actions.boost_vm_cores,
+                                 ], "Starting")
+
+
+"""

@@ -34,7 +34,7 @@ class VCSession:
         """
         Attempts to start a vm given by vm_id.
         """
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/powerOn", 
+        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/powerOn", 
                           data=None, 
                           headers=self.headers,
                           verify=False)

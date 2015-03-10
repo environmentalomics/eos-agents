@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from agent import Agent
+import agent, actions
 
-thisagent = Agent("","","","")
-thisagent.restartservice()
+restart_agent = agent.Agent("Restarting", [actions.restart_vm], "Started", "Started")
+restart_agent.dwell()

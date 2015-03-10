@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from agent import Agent
+import agent, actions
 
-thisagent = Agent("","","","")
-thisagent.predeboostservice()
+predeboost_agent = agent.Agent("Pre_Deboosting", [actions.stop_vm], "Pre_Deboosted", "Started")
+predeboost_agent.dwell()

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from agent import Agent
+import agent, actions
 
-thisagent = Agent("","","","")
-thisagent.prepareservice()
+prepare_agent = agent.Agent("Preparing", [actions.stop_vm], "Prepared", "Started")
+prepare_agent.dwell()

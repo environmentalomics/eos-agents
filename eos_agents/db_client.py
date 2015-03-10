@@ -11,7 +11,7 @@ class DBSession():
     """
     
     """    
-    def __init__(self, username, password):
+    def __init__(self):
         """
         
         """
@@ -69,6 +69,9 @@ class DBSession():
         r = requests.post('http://localhost:6543/servers/asdf/pre_deboosted', data={"vm_id":vm_id})
         return None
     
+    def set_state(self, vm_id, state):
+        r = requests.post('http://localhost:6543/servers/asdf/' + state, data={"vm_id":vm_id})
+    
     def set_state_to_deboosting(self, vm_id):
         """
         
@@ -79,7 +82,11 @@ class DBSession():
     def get_deboost_item(self):
         r = requests.get('http://localhost:6543/states/Pre_Deboosted?state=Pre_Deboosted')
         return r.text
-        
+    
+    def get_machine_in_state(self, state):
+        r = requests.get("http://localhost:6543/states/" + state + "?state=" + state)
+        return r.text
+    
     def set_state_to_deboosted(self):
         """
         
