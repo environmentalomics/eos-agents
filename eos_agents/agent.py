@@ -71,10 +71,13 @@ class Agent():
                             session.set_state(vm_id, self.success_state)    # Perform success action
                         elif status == "error":
                             print "Error"        # Flag machine as "alert" and return to previous state
+                            session.set_state(vm_id, self.error_state)
                         elif status == "canceled":
                             print "Cancelled"    # Return machine state to previous state
+                            session.set_state(vm_id, self.error_state)
                         elif status == "aborted":
                             print "Aborted"      # Return machine state to previous state
+                            session.set_state(vm_id, self.error_state)
                         else:
                             print "Error: Status=" + str(status)
             sleep(5)
@@ -94,13 +97,13 @@ boost_agent = Agent("Prepared", [get_latest_specification,
                                  set_state_to_boosting,
                                  actions.boost_vm_memory,
                                  actions.boost_vm_cores,
-                                 ], "Starting")
+                                 ], "Starting", "Error")
 
 deboost_agent = Agent("Deboosting", [get_latest_specification,
                                  set_state_to_boosting,
                                  actions.boost_vm_memory,
                                  actions.boost_vm_cores,
-                                 ], "Starting")
+                                 ], "Starting", "Error")
 
 
 """
