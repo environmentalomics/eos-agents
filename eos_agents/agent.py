@@ -1,4 +1,4 @@
-import actions, updates, db_client
+import actions, updates, db_client, requests
 from time import sleep
 
 def get_latest_specification(self):
@@ -38,15 +38,6 @@ class Agent():
             status = actions.get_status(job_id)
         return status
     
-    def get_status(self, server_id):
-        """
-        Get latest status of vCloud action pushed to Director.
-        
-        Assumes that a job id has been assigned to the server.
-        """
-        result = actions.get_status(server_progress[server]['job_id'])
-        return result
-    
     def lookup_uuid(self, id):
         if id == '1':
             return 'asd'
@@ -64,6 +55,7 @@ class Agent():
             
             # Look for Machines in target state
             vm_id = session.get_machine_in_state(self.trigger_state)
+                           
             if vm_id != None:
                 serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid != None:
