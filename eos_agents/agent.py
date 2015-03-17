@@ -88,7 +88,7 @@ Start : Working
 Stop: Working
 Restart: Not Working
 Prepare: -
-Pre-Deboost: - 
+Pre-Deboost: -  
 
 prepare_agent = Agent("Preparing", [actions.stop_vm], "Prepared", "Started")
 predeboost_agent = Agent("Pre_Deboosting", [actions.stop_vm], "Pre_Deboosted", "Started")
