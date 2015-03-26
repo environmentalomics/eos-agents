@@ -7,7 +7,7 @@ import requests
 import xml.etree.ElementTree as ET
 
 class VCSession:
-    
+
     def __init__(self, username, password, organisation, endpoint):
         """
         Starts a vCloud session by requesting a session key.
@@ -20,11 +20,11 @@ class VCSession:
         self.organisation = organisation
         self.endpoint = endpoint
         self.headers = {'Accept':'application/*+xml;version=5.1'}
-        
+
         self.last_status = -1
         self.last_job_id = -1
-        r = requests.post(endpoint + 'sessions', 
-                          headers = self.headers, 
+        r = requests.post(endpoint + 'sessions',
+                          headers=self.headers,
                           auth=(username + '@' + organisation, password),
                           verify=False)
         self.headers['x-vcloud-authorization'] = r.headers['X-VCLOUD-AUTHORIZATION']
@@ -34,68 +34,77 @@ class VCSession:
         """
         Attempts to start a vm given by vm_id.
         """
-        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/powerOn", 
-                          data=None, 
+        vm_id = str(vm_id)[3:42] + str("")
+        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/powerOn",
+                          data=None,
                           headers=self.headers,
                           verify=False)
+        print (vm_id)
         self.last_status = r.status_code
+        print r.status_code
+        print r.text
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def restart_vm(self, vm_id):
         """
         Attempts to start a vm given by vm_id.
         """
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/reboot", 
-                          data=None, 
+        vm_id = str(vm_id)[3:42] + str("")
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/reboot",
+                          data=None,
                           headers=self.headers,
                           verify=False)
         self.last_status = r.status_code
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def poweroff_vm(self, vm_id):
         """
         Attempts to start a vm given by vm_id.
         """
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/powerOff", 
-                          data=None, 
+        vm_id = str(vm_id)[3:42] + str("")
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/powerOff",
+                          data=None,
                           headers=self.headers,
                           verify=False)
         self.last_status = r.status_code
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def shutdown_vm(self, vm_id):
         """
         
         """
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown", 
-                          data=None, 
+        vm_id = str(vm_id)[3:42] + str("")
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
+                          data=None,
                           headers=self.headers,
                           verify=False)
         self.last_status = r.status_code
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def stop_vm(self, vm_id):
         """
         
         """
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown", 
-                          data=None, 
+        vm_id = str(vm_id)[3:42] + str("")
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
+                          data=None,
                           headers=self.headers,
                           verify=False)
         self.last_status = r.status_code
         root = ET.fromstring(r.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def set_system_memory_config(self, vapp_id, ram):
+        vapp_id = str(vapp_id)[3:42] + str("")
         if ram == 16:
                 tree = ET.parse("templates/16gb_memory.xml")
         elif ram == 40:
@@ -112,8 +121,9 @@ class VCSession:
         root = ET.fromstring(response.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def set_system_cpu_config(self, vapp_id, cores):
+        vapp_id = str(vapp_id)[3:42] + str("")
         if cores == 1:
                 tree = ET.parse("templates/1_core.xml")
         elif cores == 2:
@@ -130,21 +140,21 @@ class VCSession:
         root = ET.fromstring(response.content)
         self.last_job_id = root.attrib['id'].split(':')[3]
         return root.attrib['id']
-    
+
     def boost_vm(self):
         pass
-        
+
     def list_vapps(self):
         payload = {"page": "1", "pageSize":"25", "format":"idrecords"}
-        response = requests.get(self.endpoint + '/vApps/query', data=None, headers = self.headers, params=payload,
+        response = requests.get(self.endpoint + '/vApps/query', data=None, headers=self.headers, params=payload,
                           verify=False)
-        return response.text   
-    
+        return response.text
+
     def get_vapp(self, vapp_id):
         response = requests.get(self.endpoint + "/vApp/" + vapp_id, data=None, headers=self.headers,
                           verify=False)
         return response.text
-    
+
     def get_task_status(self, task_id):
         """Returns current status of a given job in vCloud Director.
         
@@ -164,18 +174,18 @@ class VCSession:
                           verify=False)
         root = ET.fromstring(response.content)
         return root.attrib['status']
-    
-    def poweron_vapp(self, vapp_id):    
+
+    def poweron_vapp(self, vapp_id):
+        vapp_id = str(vapp_id)[3:42] + str("")
         response = requests.post(self.endpoint + "/vApp/" + vapp_id + "/power/action/powerOn", data=None, headers=self.headers,
                           verify=False)
         root = ET.fromstring(response.content)
         return root.attrib['id']
-    
+
     def kill(self):
         """
         Ends the session represented by the current session token self.token.
         """
 
-    
-            
-    
+
+
