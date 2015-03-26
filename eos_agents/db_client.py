@@ -20,19 +20,21 @@ class DBSession():
     
     """    
     
-    def __init__(self):
+    def __init__(self, username, password):
         """
         Set "Last Status" to -1, to indicate that no database calls have occured yet.
         """
         self.last_status = -1
+        self.username = username
+        self.password = password
     
     def request_get(self, *args):
-        result = requests.get(*args)
+        result = requests.get(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
     def request_post(self, *args):
-        result = requests.post(*args)
+        result = requests.post(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
     
@@ -114,8 +116,8 @@ class DBSession():
     
     @catch_disconnection
     def get_machine_in_state(self, state):
-        r = requests.get("http://localhost:6543/states/" + state + "?state=" + state)
-        return r.text
+        r = self.request_get("http://localhost:6543/states/" + state + "?state=" + state)
+        return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
         
     @catch_disconnection
     def set_state_to_deboosted(self):

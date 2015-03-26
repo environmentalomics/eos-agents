@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 
-from agent import Agent
+import agent
 
-thisagent = Agent("","","","")
-thisagent.deboostservice()
+boost_agent = agent.Agent("Prepared", [agent.set_state_to_deboosting,
+                                 agent.boost_vm_memory,
+                                 agent.boost_vm_cores,
+                                 ], "Starting", "Error")
+boost_agent.dwell()

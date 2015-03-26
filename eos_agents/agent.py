@@ -1,15 +1,29 @@
 import actions, updates, db_client, requests
 from time import sleep
 
-def get_latest_specification(self):
+def set_state_to_boosting(self, vm_id):
     """
+    
     """
-    pass
+    session2 = db_client.DBSession(self.shared_username, self.shared_password)
+    session2.set_state_to_boosting(vm_id)
 
-def set_state_to_boosting(self):
+def set_state_to_deboosting(self, vm_id):
     """
+    
     """
-    pass
+    session2 = db_client.DBSession(self.shared_username, self.shared_password)
+    session2.set_state_to_deboosting(vm_id)
+
+def boost_vm_memory(self, vm_id):
+    session2 = db_client.DBSession(self.shared_username, self.shared_password)
+    cores, ram = session2.get_latest_specification(vm_id)
+    actions.boost_vm_memory(vm_id, ram)
+    
+def boost_vm_cores(self, vm_id):
+    session2 = db_client.DBSession(self.shared_username, self.shared_password)
+    cores, ram = session2.get_latest_specification(vm_id)
+    actions.boost_vm_cores(vm_id, cores)
 
 class Agent():
     """
@@ -31,6 +45,10 @@ class Agent():
         self.action_list = action_list
         self.success_state = success_state
         self.error_state = error_state
+        
+        self.shared_username = 'agent'
+        self.shared_password = 'asdf'
+        
     
     def wait_on_job(self, job_id):
         status = ""
@@ -38,23 +56,14 @@ class Agent():
             status = actions.get_status(job_id)
         return status
     
-    def lookup_uuid(self, id):
-        if id == '1':
-            return 'asd'
-        if id == '2':
-            return 'vm-99d7ee8d-69a2-4eaa-a332-11b5413ca827'
-        if id == '3':
-            return 'asd'
-        return None
-    
     def dwell(self):
         while True:
             
             # Open DB Connection
-            session = db_client.DBSession()
+            session = db_client.DBSession(self.shared_username, self.shared_password)
             
             # Look for Machines in target state
-            vm_id = session.get_machine_in_state(self.trigger_state)
+            vm_id, uuid = session.get_machine_in_state(self.trigger_state)
                            
             if vm_id != None:
                 serveruuid = self.lookup_uuid(vm_id)
@@ -93,16 +102,14 @@ Pre-Deboost: -
 prepare_agent = Agent("Preparing", [actions.stop_vm], "Prepared", "Started")
 predeboost_agent = Agent("Pre_Deboosting", [actions.stop_vm], "Pre_Deboosted", "Started")
 
-boost_agent = Agent("Prepared", [get_latest_specification,
-                                 set_state_to_boosting,
-                                 actions.boost_vm_memory,
-                                 actions.boost_vm_cores,
+boost_agent = Agent("Prepared", [set_state_to_boosting,
+                                 boost_vm_memory,
+                                 boost_vm_cores,
                                  ], "Starting", "Error")
 
-deboost_agent = Agent("Deboosting", [get_latest_specification,
-                                 set_state_to_boosting,
-                                 actions.boost_vm_memory,
-                                 actions.boost_vm_cores,
+deboost_agent = Agent("Pre_Deboosted", [set_state_to_deboosting,
+                                 boost_vm_memory,
+                                 boost_vm_cores,
                                  ], "Starting", "Error")
 
 

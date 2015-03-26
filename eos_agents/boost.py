@@ -1,6 +1,9 @@
 #!/usr/bin/python3
 
-from agent import Agent
+import agent
 
-thisagent = Agent("","","","")
-thisagent.boostservice()
+boost_agent = agent.Agent("Prepared", [agent.set_state_to_boosting,
+                                 agent.boost_vm_memory,
+                                 agent.boost_vm_cores,
+                                 ], "Starting", "Error")
+boost_agent.dwell()
