@@ -7,6 +7,7 @@ if __name__ == "__main__":
 
     requires = [
         "requests >= 2.5.1",    # For calling vCloud API
+        "setproctitle",         # To show the running agent in process table
     ]
 
     setup(
