@@ -44,8 +44,11 @@ class VCSession:
         print r.status_code
         print r.text
         root = ET.fromstring(r.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        if root is not None:
+            self.last_job_id = root.attrib['id'].split(':')[3]
+            return root.attrib['id']
+        else:
+            return
 
     def restart_vm(self, vm_id):
         """

@@ -68,25 +68,26 @@ class Agent():
                 if serveruuid != None:
                     print ("Found action for server " + (str(serveruuid)).strip())
                     for job in self.action_list:
-
-                        status_code, job_id = job(serveruuid)  # Execute VM action
-                        print "Waiting for response"
-                        status = self.wait_on_job(job_id)  # Wait for job to complete
-
-                        if status == "success":
-                            print "Success"
-                            session.set_state(vm_id, self.success_state)  # Perform success action
-                        elif status == "error":
-                            print "Error"  # Flag machine as "alert" and return to previous state
+                        try:
+                            status_code, job_id = job(serveruuid)  # Execute VM action
+                            print "Waiting for response"
+                            status = self.wait_on_job(job_id)  # Wait for job to complete
+                            if status == "success":
+                                print "Success"
+                                session.set_state(vm_id, self.success_state)  # Perform success action
+                            elif status == "error":
+                                print "Error"  # Flag machine as "alert" and return to previous state
+                                session.set_state(vm_id, self.error_state)
+                            elif status == "canceled":
+                                print "Cancelled"  # Return machine state to previous state
+                                session.set_state(vm_id, self.error_state)
+                            elif status == "aborted":
+                                print "Aborted"  # Return machine state to previous state
+                                session.set_state(vm_id, self.error_state)
+                            else:
+                                print "Error: Status=" + str(status)
+                        except KeyError:
                             session.set_state(vm_id, self.error_state)
-                        elif status == "canceled":
-                            print "Cancelled"  # Return machine state to previous state
-                            session.set_state(vm_id, self.error_state)
-                        elif status == "aborted":
-                            print "Aborted"  # Return machine state to previous state
-                            session.set_state(vm_id, self.error_state)
-                        else:
-                            print "Error: Status=" + str(status)
             sleep(5)
 
 """
