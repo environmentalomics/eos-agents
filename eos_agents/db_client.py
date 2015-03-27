@@ -123,19 +123,19 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/pre_deboosted', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/pre_deboosted' % vm_id)
         return None
 
     @catch_disconnection
     def set_state(self, vm_id, state):
-        r = requests.post(self.db_url + '/servers/asdf/' + state, data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/' + state % vm_id)
 
     @catch_disconnection
     def set_state_to_deboosting(self, vm_id):
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/Deboosting', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/Deboosting' % vm_id)
         return None
 
     @catch_disconnection
@@ -154,11 +154,11 @@ class DBSession():
         return json.loads(r.text)
 
     @catch_disconnection
-    def set_state_to_deboosted(self):
+    def set_state_to_deboosted(self, vm_id):
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/Deboosted', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/Deboosted' % vm_id)
         return None
 
     @catch_disconnection
@@ -166,7 +166,7 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/stopped', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/stopped' % vm_id)
         return None
 
     @catch_disconnection
@@ -174,7 +174,7 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/started', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/started' % vm_id)
         return None
 
     @catch_disconnection
@@ -182,13 +182,13 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/prepared', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/prepared' % vm_id)
         return None
 
     @catch_disconnection
 
     def get_name(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/' + str(vm_id))
+        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
         return json.loads(r.text)['artifact_uuid']
 
     @catch_disconnection
@@ -196,7 +196,7 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/start', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/start' % vm_id)
         return None
 
     @catch_disconnection
@@ -204,12 +204,12 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/asdf/boost', data={"vm_id":vm_id})
+        r = requests.post(self.db_url + '/servers/%s/boost' % vm_id)
         return None
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/' + str(vm_id))
+        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
         vm_name = json.loads(r.text)['artifact_uuid']
         r = requests.get(self.db_url + '/servers/' + vm_name + '/specification')
         return json.loads(r.text)['cores'], json.loads(r.text)['ram']
