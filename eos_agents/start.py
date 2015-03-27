@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-import agent, actions
+from eos_agents import agent, actions
 
 start_agent = agent.Agent("Starting", [actions.start_vm], "Started", "Stopped")
-start_agent.dwell()
+
+if __name__ == '__main__':
+    start_agent.dwell()

@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-import agent, actions
+from eos_agents import agent, actions
 
 predeboost_agent = agent.Agent("Pre_Deboosting", [actions.stop_vm], "Pre_Deboosted", "Started")
-predeboost_agent.dwell()
+
+if __name__ == '__main__':
+    predeboost_agent.dwell()

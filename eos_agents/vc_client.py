@@ -11,7 +11,7 @@ class VCSession:
     def __init__(self, username, password, organisation, endpoint):
         """
         Starts a vCloud session by requesting a session key.
-        
+
         Also saves credentials which will be used regularly into object
         variables.
         """
@@ -24,6 +24,7 @@ class VCSession:
         self.last_status = -1
         self.last_job_id = -1
         r = requests.post(endpoint + 'sessions',
+                          headers=self.headers,
                           headers=self.headers,
                           auth=(username + '@' + organisation, password),
                           verify=False)
@@ -49,6 +50,8 @@ class VCSession:
             return root.attrib['id']
         else:
             return
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
 
     def restart_vm(self, vm_id):
         """
@@ -80,7 +83,7 @@ class VCSession:
 
     def shutdown_vm(self, vm_id):
         """
-        
+
         """
         vm_id = str(vm_id)[3:42] + str("")
         r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
@@ -94,7 +97,7 @@ class VCSession:
 
     def stop_vm(self, vm_id):
         """
-        
+
         """
         vm_id = str(vm_id)[3:42] + str("")
         r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
@@ -160,18 +163,18 @@ class VCSession:
 
     def get_task_status(self, task_id):
         """Returns current status of a given job in vCloud Director.
-        
+
         This will be one of:
-        
+
             * queued - The task has been queued for execution.
             * preRunning - The task is awaiting preprocessing or, if it is a
-              blocking task, administrative action. 
+              blocking task, administrative action.
             * running - The task is runnning.
             * success - The task completed with a status of success.
             * error - The task encountered an error while running.
             * canceled - The task was canceled by the owner or an administrator.
             * aborted - The task was aborted by an administrative action.
-             
+
         """
         response = requests.get(self.endpoint + "/task/" + task_id, data=None, headers=self.headers,
                           verify=False)
@@ -189,6 +192,3 @@ class VCSession:
         """
         Ends the session represented by the current session token self.token.
         """
-
-
-

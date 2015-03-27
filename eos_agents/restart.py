@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 
-import agent, actions
+from eos_agents import agent, actions
 
 restart_agent = agent.Agent("Restarting", [actions.restart_vm], "Started", "Started")
-restart_agent.dwell()
+
+if __name__ == '__main__':
+    restart_agent.dwell()
