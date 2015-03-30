@@ -1,10 +1,17 @@
 """
-
+Yet another VCD client module for Python.
 
 """
 
 import requests
 import xml.etree.ElementTree as ET
+
+#This is almost certainly a Good Idea
+from requests.packages import urllib3
+urllib3.disable_warnings()
+
+#Handy constant
+ns_vc = "http://www.vmware.com/vcloud/v1.5"
 
 class VCSession:
 
@@ -23,8 +30,10 @@ class VCSession:
 
         self.last_status = -1
         self.last_job_id = -1
+
+        print("Connecting to " + endpoint + 'sessions')
+
         r = requests.post(endpoint + 'sessions',
-                          headers=self.headers,
                           headers=self.headers,
                           auth=(username + '@' + organisation, password),
                           verify=False)
@@ -42,8 +51,8 @@ class VCSession:
                           verify=False)
         print (vm_id)
         self.last_status = r.status_code
-        print r.status_code
-        print r.text
+        print (r.status_code)
+        print (r.text)
         root = ET.fromstring(r.content)
         if root is not None:
             self.last_job_id = root.attrib['id'].split(':')[3]
@@ -150,11 +159,49 @@ class VCSession:
     def boost_vm(self):
         pass
 
-    def list_vapps(self):
-        payload = {"page": "1", "pageSize":"25", "format":"idrecords"}
-        response = requests.get(self.endpoint + '/vApps/query', data=None, headers=self.headers, params=payload,
-                          verify=False)
-        return response.text
+    #See http://pubs.vmware.com/vcd-51/topic/com.vmware.vcloud.api.doc_51/GUID-9356B99B-E414-474A-853C-1411692AF84C.html
+    def list_vms(self, pagesize=50):
+        """Returns an iterable list of VMs in the form of ElementTree
+           VMRecord elements.
+        """
+        page=1
+        while True:
+            payload = {"page": str(page), "pageSize":str(pagesize), "format":"idrecords"}
+            response = requests.get(self.endpoint + '/vms/query', data=None, headers=self.headers, params=payload,
+                                    verify=False)
+            resp1 = ET.fromstring(response.text)
+
+            vms = resp1.findall(".//{%s}VMRecord" % ns_vc )
+            for x in vms:
+                yield x
+
+            page += 1
+            # Keep fetching pages until we run out.  Note there is a race condition if the list changes
+            # in mid query.  We assume you don't care.
+            if len(vms) < pagesize:
+                break
+
+
+    def list_vapps(self, pagesize=50):
+        """Returns an iterable list of vApps in the form of ElementTree
+           VAppRecord elements.
+        """
+        page = 1
+        while True:
+            payload = {"page": str(page), "pageSize":str(pagesize), "format":"idrecords"}
+            response = requests.get(self.endpoint + '/vApps/query', data=None, headers=self.headers, params=payload,
+                                    verify=False)
+            resp1 = ET.fromstring(response.text)
+
+            vapps = resp1.findall(".//{%s}VAppRecord" % ns_vc )
+            for x in vapps:
+                yield x
+
+            page += 1
+            # Keep fetching pages until we run out.  Note there is a race condition if the list changes
+            # in mid query.  We assume you don't care.
+            if len(vapps) < pagesize:
+                break
 
     def get_vapp(self, vapp_id):
         response = requests.get(self.endpoint + "/vApp/" + vapp_id, data=None, headers=self.headers,
@@ -187,6 +234,35 @@ class VCSession:
                           verify=False)
         root = ET.fromstring(response.content)
         return root.attrib['id']
+
+    def get_all_vms_for_user(self, username):
+        """Obtain all VMs for a given user, assuming that each VApp has only one VM
+        """
+        # Find all VAppRecords where ownerName matches and drill down to find VM IDs
+        # We can't use list_vms() because we can't see the owner in the results
+        for vapp in self.list_vapps():
+            if vapp.attrib.get('ownerName') != username:
+                continue
+
+            #I don't get a direct link to the vApp in the response, so here is a heuristic
+            #to convert the id into something I can pass to get_vapp.
+            vapp_id = 'vapp-' + vapp.attrib.get('id')[16:]
+            resp2 = ET.fromstring(self.get_vapp(vapp_id))
+
+            #Assume exactly one VirtualMachineId is going to be mentioned in the XML.
+            vm = resp2.find(".//{%s}Vm" % ns_vc)
+            vm_id = vm.findtext(".//{%s}VirtualMachineId" % ns_vc)
+            #print(vm.attrib.get('name') + ' : vm-' + vm_id)
+            yield (vm.attrib.get('name'), 'vm-' + vm_id)
+
+    def get_vm_uid_from_name(self, machine_name):
+        """Obtain a VM UUID from a name
+        """
+        for vm in self.list_vms():
+            if vm.attrib.get('name') != machine_name:
+                continue
+
+            return 'vm-' + vm.attrib.get('id')[14:]
 
     def kill(self):
         """
