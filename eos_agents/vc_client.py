@@ -10,6 +10,8 @@ import xml.etree.ElementTree as ET
 from requests.packages import urllib3
 urllib3.disable_warnings()
 
+# FIXME - we should import and trust the certificate for our SSL endpoint
+
 #Handy constant
 ns_vc = "http://www.vmware.com/vcloud/v1.5"
 
@@ -268,3 +270,6 @@ class VCSession:
         """
         Ends the session represented by the current session token self.token.
         """
+        response = requests.delete(self.endpoint + '/session', data=None, headers=self.headers,
+                                   verify=False)
+        self.headers = None
