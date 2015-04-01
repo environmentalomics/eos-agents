@@ -57,55 +57,65 @@ class DBSession():
         self.password = password
         self.db_url = db_url or 'http://localhost:6543'
 
-    def request_get(self, *args):
+    def get(self, *args):
+        args[0] = self.db_url + args[0]
         result = requests.get(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
-    def request_post(self, *args):
+    def post(self, *args):
+        args[0] = self.db_url + args[0]
         result = requests.post(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
     #FIXME - I suspect this connects to nothing in the DB
-    #FIXME2 - I expect a list back
+    #FIXME 2 - I expect a list back
     @catch_disconnection
     def get_auto_deboost_item(self):
-        r = requests.get(self.db_url + '/states/boostexpired')
+        r = self.get('/states/boostexpired')
         return r.text
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
-        r = self.request_get(self.db_url + "/states/" + "asdf" + "asdf")
+        r = self.get("/states/" + "asdf" + "asdf")
         return json.loads(r.text)
 
     #FIXME - I want a list, not just a single item
     def get_machine_in_state(self, state):
-        r = self.request_get(self.db_url + "/states/" + state)
+        r = self.get("/states/" + state)
         return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
+
+    #FIXME - This should fail if the VM is not in a de-boostable state, just as it
+    # should when a manual deboost is tried on a machine not ready to be deboosted.
+    def do_deboost(self, vm_id):
+        r = self.post('...')
+        if r.status_code[:1] != '2':
+            raise Some Error
+        return r
 
     #If this fails, the agent will hust end up triggering again, and this should be fine.
     @catch_disconnection
     def set_state(self, vm_id, state):
-        r = requests.post(self.db_url + '/servers/%s/%s' (vm_id, state))
+        r = self.post('/servers/%s/%s' (vm_id, state))
 
 
     def get_name(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
+        r = self.get('/servers/by_id/%s' % vm_id)
         return json.loads(r.text)['artifact_uuid']
 
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
+        r = self.get('/servers/by_id/%s' % vm_id)
         vm_name = json.loads(r.text)['artifact_uuid']
-        r = requests.get(self.db_url + '/servers/' + vm_name + '/specification')
+        r = self.get('/servers/' + vm_name + '/specification')
         return json.loads(r.text)['cores'], json.loads(r.text)['ram']
 
     @catch_disconnection
     def set_specification(self, vm_name, cores, ram):
-        r = requests.post(self.db_url + '/servers/' + vm_name + '/specification',
-                          data={"vm_id":vm_name, "cores": cores, "ram": ram})
+        r = self.post('/servers/' + vm_name + '/specification',
+                      data={"vm_id":vm_name, "cores": cores, "ram": ram})
 
     def kill(self):
         """
