@@ -25,7 +25,6 @@ class VCSession:
         self.last_job_id = -1
         r = requests.post(endpoint + 'sessions',
                           headers=self.headers,
-                          headers=self.headers,
                           auth=(username + '@' + organisation, password),
                           verify=False)
         self.headers['x-vcloud-authorization'] = r.headers['X-VCLOUD-AUTHORIZATION']
@@ -42,8 +41,8 @@ class VCSession:
                           verify=False)
         print (vm_id)
         self.last_status = r.status_code
-        print r.status_code
-        print r.text
+        print (r.status_code)
+        print (r.text)
         root = ET.fromstring(r.content)
         if root is not None:
             self.last_job_id = root.attrib['id'].split(':')[3]

@@ -49,16 +49,15 @@ class Agent():
 
             # Look for Machines in target state
             try:
-                vm_id, uuid = session.get_machine_in_state(self.trigger_state)
+                vm_id, serveruuid = session.get_machine_in_state(self.trigger_state)
             except ConnectionError:
                 vm_id = None
                 print("Connection error on DB." +
                       (" Will keep trying!" if persist else ""))
 
             if vm_id:
-                serveruuid = self.lookup_uuid(vm_id)
                 if serveruuid:
-                    print("Found action for server " + vm_id)
+                    print("Found action for server " + str(vm_id))
                     for job in self.action_list:
                         try:
                             status_code, job_id = job(serveruuid)  # Execute VM action

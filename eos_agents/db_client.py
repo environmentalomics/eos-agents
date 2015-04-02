@@ -7,6 +7,9 @@ is initially set to -1.
 
 import sys
 import requests, json
+from requests.packages import urllib3
+
+urllib3.disable_warnings()
 
 def catch_disconnection(dbfunc):
     def safe_function(*args):
@@ -15,7 +18,6 @@ def catch_disconnection(dbfunc):
         except requests.exceptions.ConnectionError:
             return None
     return safe_function
-
 
 def get_default_db_session():
         """ Contructs a default DB session by looking at how the program was
@@ -123,19 +125,19 @@ class DBSession():
         """
 
         """
-        r = requests.post(self.db_url + '/servers/%s/pre_deboosted' % vm_id)
+        r = requests.post(self.db_url + '/servers/%s/pre_deboosted' % str(vm_id))
         return None
 
     @catch_disconnection
     def set_state(self, vm_id, state):
-        r = requests.post(self.db_url + '/servers/%s/' + state % vm_id)
+        r = requests.post((self.db_url + '/servers/%s/' + state) % str(vm_id))
 
     @catch_disconnection
     def set_state_to_deboosting(self, vm_id):
         """
 
         """
-        r = requests.post(self.db_url + '/servers/%s/Deboosting' % vm_id)
+        r = requests.post(self.db_url + '/servers/%s/Deboosting' % str(vm_id))
         return None
 
     @catch_disconnection
@@ -145,7 +147,15 @@ class DBSession():
 
     def get_machine_in_state(self, state):
         r = self.request_get(self.db_url + "/states/" + state + "?state=" + state)
-        return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
+        print (r.text)
+        if r.text is not None:
+            json_output = json.loads(r.text)
+            if 'artifact_id' in json_output and 'artifact_uuid' in json_output:
+                return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
+            else:
+                return None
+        else:
+            return None
 
 
     def get_machine_state_counts(self):
