@@ -7,9 +7,6 @@ is initially set to -1.
 
 import sys
 import requests, json
-from requests.packages import urllib3
-
-urllib3.disable_warnings()
 
 def catch_disconnection(dbfunc):
     def safe_function(*args):
@@ -18,6 +15,7 @@ def catch_disconnection(dbfunc):
         except requests.exceptions.ConnectionError:
             return None
     return safe_function
+
 
 def get_default_db_session():
         """ Contructs a default DB session by looking at how the program was
@@ -59,176 +57,68 @@ class DBSession():
         self.password = password
         self.db_url = db_url or 'http://localhost:6543'
 
-    def request_get(self, *args):
+    def get(self, *args):
+        args[0] = self.db_url + args[0]
         result = requests.get(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
-    def request_post(self, *args):
+    def post(self, *args):
+        args[0] = self.db_url + args[0]
         result = requests.post(*args, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
-    @catch_disconnection
-    def get_triggers(self, trigger):
-        """Gets a list of all servers in the trigger state specified.
-
-        :param trigger: Plaintext of the trigger which we are searching for.
-        :returns: List of vm ids.
-        """
-        r = requests.get(self.db_url + '/states?state=' + trigger)
-        serverlist = r.keys
-        return serverlist
-
-    @catch_disconnection
-    def get_prestart_item(self):
-        r = requests.get(self.db_url + '/states/Starting')
-        return r.text
-
-    @catch_disconnection
-    def get_restart_item(self):
-        r = requests.get(self.db_url + '/states/Restarting')
-        return r.text
-
-    @catch_disconnection
-    def get_prestop_item(self):
-        r = requests.get(self.db_url + '/states/Stopping')
-        return r.text
-
-    @catch_disconnection
-    def get_prepare_item(self):
-        r = requests.get(self.db_url + '/states/Preparing')
-        return r.text
-
-    @catch_disconnection
-    def get_boost_item(self):
-        r = requests.get(self.db_url + '/states/Prepared')
-        return r.text
-
+    #FIXME - I suspect this connects to nothing in the DB
+    #FIXME 2 - I expect a list back
     @catch_disconnection
     def get_auto_deboost_item(self):
-        r = requests.get(self.db_url + '/states/boostexpired')
+        r = self.get('/states/boostexpired')
         return r.text
-
-    @catch_disconnection
-    def get_manual_deboost_item(self):
-        r = requests.get(self.db_url + '/states/Deboosting')
-        return r.text
-
-    @catch_disconnection
-    def get_predeboost_item(self):
-        r = requests.get(self.db_url + '/states/Pre_Deboosting')
-        return r.text
-
-    @catch_disconnection
-    def set_state_to_predeboosted(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/pre_deboosted' % str(vm_id))
-        return None
-
-    @catch_disconnection
-    def set_state(self, vm_id, state):
-        r = requests.post((self.db_url + '/servers/%s/' + state) % str(vm_id))
-
-    @catch_disconnection
-    def set_state_to_deboosting(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/Deboosting' % str(vm_id))
-        return None
-
-    @catch_disconnection
-    def get_deboost_item(self):
-        r = requests.get(self.db_url + '/states/Pre_Deboosted')
-        return r.text
-
-    def get_machine_in_state(self, state):
-        r = self.request_get(self.db_url + "/states/" + state + "?state=" + state)
-        print (r.text)
-        if r.text is not None:
-            json_output = json.loads(r.text)
-            if 'artifact_id' in json_output and 'artifact_uuid' in json_output:
-                return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
-            else:
-                return None
-        else:
-            return None
-
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
-        r = self.request_get(self.db_url + "/states/" + "asdf" + "asdf")
+        r = self.get("/states/" + "asdf" + "asdf")
         return json.loads(r.text)
 
+    #FIXME - I want a list, not just a single item
+    def get_machine_in_state(self, state):
+        r = self.get("/states/" + state)
+        return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
+
+    #FIXME - This should fail if the VM is not in a de-boostable state, just as it
+    # should when a manual deboost is tried on a machine not ready to be deboosted.
+    def do_deboost(self, vm_id):
+        r = self.post('...')
+        if r.status_code[:1] != '2':
+            raise Some Error
+        return r
+
+    #If this fails, the agent will hust end up triggering again, and this should be fine.
     @catch_disconnection
-    def set_state_to_deboosted(self, vm_id):
-        """
+    def set_state(self, vm_id, state):
+        r = self.post('/servers/%s/%s' (vm_id, state))
 
-        """
-        r = requests.post(self.db_url + '/servers/%s/Deboosted' % vm_id)
-        return None
-
-    @catch_disconnection
-    def set_state_to_stopped(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/stopped' % vm_id)
-        return None
-
-    @catch_disconnection
-    def set_state_to_started(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/started' % vm_id)
-        return None
-
-    @catch_disconnection
-    def set_state_to_prepared(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/prepared' % vm_id)
-        return None
-
-    @catch_disconnection
 
     def get_name(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
+        r = self.get('/servers/by_id/%s' % vm_id)
         return json.loads(r.text)['artifact_uuid']
 
-    @catch_disconnection
-    def set_state_to_starting(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/start' % vm_id)
-        return None
-
-    @catch_disconnection
-    def set_state_to_boosting(self, vm_id):
-        """
-
-        """
-        r = requests.post(self.db_url + '/servers/%s/boost' % vm_id)
-        return None
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = requests.get(self.db_url + '/servers/by_id/%s' % vm_id)
+        r = self.get('/servers/by_id/%s' % vm_id)
         vm_name = json.loads(r.text)['artifact_uuid']
-        r = requests.get(self.db_url + '/servers/' + vm_name + '/specification')
+        r = self.get('/servers/' + vm_name + '/specification')
         return json.loads(r.text)['cores'], json.loads(r.text)['ram']
 
     @catch_disconnection
     def set_specification(self, vm_name, cores, ram):
-        r = requests.post(self.db_url + '/servers/' + vm_name + '/specification', data={"vm_id":vm_name, "cores": cores, "ram": ram})
+        r = self.post('/servers/' + vm_name + '/specification',
+                      data={"vm_id":vm_name, "cores": cores, "ram": ram})
 
     def kill(self):
         """
-        Closes the session.
+        Closes the session.  Nothing to do, since the API is stateless and we are not
+        using token-based auth.
         """

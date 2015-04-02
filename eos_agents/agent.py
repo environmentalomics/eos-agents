@@ -29,6 +29,8 @@ class Agent():
         self.success_state = success_state
         self.error_state = error_state
 
+        self.sleep_time = 5
+
         # Add this agent to the global registry.
         all_agents[trigger_state] = self
 
@@ -84,6 +86,6 @@ class Agent():
                     session.set_state(vm_id, self.error_state)
             else:
                 if persist:
-                    sleep(5)
+                    sleep(self.sleep_time)
                 else:
                     break
