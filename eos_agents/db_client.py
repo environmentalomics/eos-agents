@@ -1,5 +1,5 @@
 """
-db_api_client: Routines to call to the DB API
+db_api_client: Routines to call to the DB API, normally on port 6543
 
 The most recent HTTP result code is held in the variable "last_status", which
 is initially set to -1.
@@ -70,7 +70,7 @@ class DBSession():
         return result
 
     #FIXME - I suspect this connects to nothing in the DB
-    #FIXME 2 - I expect a list back
+    #FIXME 2 - I need a list back
     @catch_disconnection
     def get_auto_deboost_item(self):
         r = self.get('/states/boostexpired')
@@ -89,9 +89,11 @@ class DBSession():
     #FIXME - This should fail if the VM is not in a de-boostable state, just as it
     # should when a manual deboost is tried on a machine not ready to be deboosted.
     def do_deboost(self, vm_id):
-        r = self.post('...')
+        """Puts the given machine into state PreDeboosting so that the agents
+           will come along and deboost it"""
+        r = self.post('/servers/%s/%s' (vm_id, 'PreDeboosting'))
         if r.status_code[:1] != '2':
-            raise Some Error
+            raise Exception("Some Error???")
         return r
 
     #If this fails, the agent will hust end up triggering again, and this should be fine.
