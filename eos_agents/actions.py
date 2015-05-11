@@ -1,10 +1,13 @@
 """
-ch_agents.actions
+eos_agents.actions
 
 A library containing a function for each action which an agent can perform
 on the vCloud environment via the vCloud API. This module is exclusively aimed
 at interfacing with vCloud.
 """
+
+# FIXME - These actions should be stripped of the session start/stop boilerplate
+# and instead should inherit the session from the Agent.
 
 from eos_agents.vc_client import VCSession
 from eos_agents.settings import VCDetails as VCD
@@ -51,7 +54,7 @@ def poweroff_vm(vm_id):
 
 def boost_vm_memory(vm_id, ram):
     """
-    
+    Boost or deboost the VM memory
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
     session.set_system_memory_config(vm_id, ram)
@@ -60,7 +63,7 @@ def boost_vm_memory(vm_id, ram):
 
 def boost_vm_cores(vm_id, cores):
     """
-    
+    Boost or deboost the VM cores
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
     session.set_system_cpu_config(vm_id, cores)
@@ -76,5 +79,3 @@ def get_status(job_id):
     job_status = session.get_task_status(job_id)
     session.kill()
     return job_status
-
-    

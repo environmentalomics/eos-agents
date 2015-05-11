@@ -58,14 +58,14 @@ class DBSession():
         self.db_url = db_url or 'http://localhost:6543'
 
     def get(self, *args):
-        args[0] = self.db_url + args[0]
-        result = requests.get(*args, auth=(self.username, self.password))
+        newargs = ( self.db_url + args[0], ) + args[1:]
+        result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 
     def post(self, *args):
-        args[0] = self.db_url + args[0]
-        result = requests.post(*args, auth=(self.username, self.password))
+        newargs = ( self.db_url + args[0], ) + args[1:]
+        result = requests.post(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result
 

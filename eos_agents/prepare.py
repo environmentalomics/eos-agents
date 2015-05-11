@@ -2,7 +2,15 @@
 
 from eos_agents import agent, actions
 
-prepare_agent = agent.Agent("Preparing", [actions.stop_vm], "Prepared", "Started")
+class Prepare_Agent(agent.Agent):
 
+    trigger_state = "Preparing"
+    success_state = "Prepared"
+    failure_state = "Started"
+
+    def act(self):
+        self.do_action(actions.stop_vm)
+
+prepare_agent = Prepare_Agent()
 if __name__ == '__main__':
     prepare_agent.dwell()

@@ -87,6 +87,7 @@ def main():
     if args.dry_run:
         for a in get_required_actions():
             log.info("Starting agent for %s" % a)
+        exit()
 
     ## Start the main loop
     # TODO - allow clean exit on Ctrl+C
@@ -96,7 +97,7 @@ def main():
     try:
         while True:
             for a in get_required_actions(db_session):
-                start_job("eos-agents - %s" % a, all_agents[a].dwell,
+                start_job("[eos-agents] %s" % a, all_agents[a].dwell,
                           session=db_session, persist=False)
 
             sleep_n_reap(poll_interval)
@@ -109,19 +110,20 @@ def main():
     reap_all_jobs()
 
 def get_required_actions(db_session):
-    """Queries the eos-db for what needs doing.  The eos-db return a JSON dict
+    """Queries the eos-db for what needs doing.  The eos-db should return a JSON dict
        of status=>count.  Where the count > 0 and where I have a suitable agent to
        process the work I will return the agent name.
     """
 
     # status_table = db_session.get_machine_state_counts()
 
-    #Since the call in eos-db is unimplemented just have a dummy dict for now
-    # 'Starting' and 'Prepared' should be returned.
-    status_table = { 'Starting' :  2,
-                     'Prepared' :  1,
-                     'Running'  :  2,
-                     'Stopping' :  0 }
+    # FIXME
+    #Since the call in eos-db is unimplemented just have a dummy dict for now.
+    #Note that this starts all the agents and is silly but should kinda work.
+    status_table = {}
+    for k, v in all_agents.items():
+        status_table[k] = 1
+    #end FIXME
 
     for k, v in status_table.items():
         if v > 0 and k in all_agents:

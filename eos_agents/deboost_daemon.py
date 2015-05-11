@@ -32,6 +32,7 @@ class Daemon():
 
         # Warn the user with 24 hours to go and then at 1 hour.  This needs a lot of
         # coding to make it work, not least a way to remember who I warned about what.
+        # Or do I just need to remember the time of the last message I sent??
         self.warn_at([24 * 60, 1 * 60])
 
     def lurk(self, session=None, persist=True):

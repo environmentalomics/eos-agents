@@ -2,7 +2,15 @@
 
 from eos_agents import agent, actions
 
-stop_agent = agent.Agent("Stopping", [actions.stop_vm], "Stopped", "Started")
+class Stop_Agent(agent.Agent):
 
+    trigger_state = "Stopping"
+    success_state = "Stopped"
+    failure_state = "Started"
+
+    def act(self):
+        self.do_action(actions.stop_vm)
+
+stop_agent = Stop_Agent()
 if __name__ == '__main__':
     stop_agent.dwell()

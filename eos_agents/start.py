@@ -2,7 +2,15 @@
 
 from eos_agents import agent, actions
 
-start_agent = agent.Agent("Starting", [actions.start_vm], "Started", "Stopped")
+class Start_Agent(agent.Agent):
 
+    trigger_state = "Starting"
+    success_state = "Started"
+    failure_state = "Stopped"
+
+    def act(self):
+        self.do_action(actions.start_vm)
+
+start_agent = Start_Agent()
 if __name__ == '__main__':
     start_agent.dwell()
