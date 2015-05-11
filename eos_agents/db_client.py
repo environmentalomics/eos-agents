@@ -63,6 +63,10 @@ class DBSession():
         self.last_status = result.status_code
         return result
 
+    def getj(self, *args):
+        result = self.get(*args)
+        return json.loads(result.text)
+
     def post(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
         result = requests.post(*newargs, auth=(self.username, self.password))
@@ -73,18 +77,17 @@ class DBSession():
     #FIXME 2 - I need a list back
     @catch_disconnection
     def get_auto_deboost_item(self):
-        r = self.get('/states/boostexpired')
-        return r.text
+        return self.getj('/states/boostexpired')
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
-        r = self.get("/states/" + "asdf" + "asdf")
-        return json.loads(r.text)
+        return self.getj("/states/" + "asdf" + "asdf")
 
-    #FIXME - I want a list, not just a single item
+    #FIXME - I want to return the full list, not just a single item
     def get_machine_in_state(self, state):
-        r = self.get("/states/" + state)
-        return json.loads(r.text)['artifact_id'], json.loads(r.text)['artifact_uuid']
+        r = self.getj("/states/" + state)
+
+        return r[0]['artifact_id'], r[0]['artifact_uuid']
 
     #FIXME - This should fail if the VM is not in a de-boostable state, just as it
     # should when a manual deboost is tried on a machine not ready to be deboosted.
@@ -102,17 +105,16 @@ class DBSession():
         r = self.post('/servers/%s/%s' (vm_id, state))
 
 
-    def get_name(self, vm_id):
-        r = self.get('/servers/by_id/%s' % vm_id)
-        return json.loads(r.text)['artifact_uuid']
+    def get_uuid(self, vm_id):
+        return self.getj('/servers/by_id/%s' % vm_id)['artifact_uuid']
 
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = self.get('/servers/by_id/%s' % vm_id)
-        vm_name = json.loads(r.text)['artifact_uuid']
-        r = self.get('/servers/' + vm_name + '/specification')
-        return json.loads(r.text)['cores'], json.loads(r.text)['ram']
+        r = self.getj('/servers/by_id/%s' % vm_id)
+        vm_name = r['artifact_uuid']
+        r2 = self.getj('/servers/' + vm_name + '/specification')
+        return r2['cores'], r2['ram']
 
     @catch_disconnection
     def set_specification(self, vm_name, cores, ram):
