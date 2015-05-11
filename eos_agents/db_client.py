@@ -61,6 +61,9 @@ class DBSession():
         newargs = ( self.db_url + args[0], ) + args[1:]
         result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
+        #For my purposes I expect a 200 response every time
+        if str(result.status_code)[0] != '2':
+            raise ValueError("HTTP error response")
         return result
 
     def getj(self, *args):

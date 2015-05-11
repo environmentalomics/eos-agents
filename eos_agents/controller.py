@@ -71,7 +71,7 @@ def main():
 
     shared_password = 'test'
     if args.secretfile:
-        with args.secretfile as ssfile:
+        with open(args.secretfile) as ssfile:
             shared_password=ssfile.read().rstrip('\n')
     else:
         log.warning("Warning - using password '%s'.  Use -s <secretfile> to provide a proper one." % shared_password)
