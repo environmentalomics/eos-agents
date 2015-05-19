@@ -27,7 +27,7 @@ class TestController(unittest.TestCase):
     # Here's how to fake a fork+wait!
     @patch('os.fork', return_value=101)
     @patch('os.waitpid', side_effect=[ ( 101, 0), ChildProcessError('mock') ] )
-    def test_start_reap_job(self, fork, waitpid):
+    def test_start_reap_job(self, *args):
         """Start a no-op job and reap it
            Using len() as a sample function
            Actually, forking in unit tests is a no-no, hence the mock fork - see
