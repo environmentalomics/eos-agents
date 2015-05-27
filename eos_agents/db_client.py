@@ -106,7 +106,7 @@ class DBSession():
             raise Exception("Some Error???")
         return r
 
-    #If this fails, the agent will hust end up triggering again, and this should be fine.
+    #If this fails, the agent will just end up triggering again, and this should be fine.
     @catch_disconnection
     def set_state(self, vm_id, state):
         r = self.post('/servers/%s/%s' (vm_id, state))

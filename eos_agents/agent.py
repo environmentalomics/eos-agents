@@ -1,8 +1,7 @@
-from eos_agents import actions, db_client
+from eos_agents import actions, db_client, all_agents
 from time import sleep
 
-# A global list of all active agents.
-all_agents = {}
+# FIXME - use logging!
 
 class JobException(Exception):
     pass
@@ -25,6 +24,8 @@ class Agent:
     """
     #Default sleep time, may be overridden or modified as needed
     sleep_time = 5
+    #Delay when polling for updates from VCD
+    poll_time = 2
 
     def __init__(self):
         """All subclasses should ensure that this constructor is called, if they
@@ -49,12 +50,15 @@ class Agent:
         self.vm_id = None
 
     def wait_on_job(self, job_id):
-        status = ""
+        """Keep asking VCD about the job until we get a result.
+        """
+        status = actions.get_status(job_id)
         while status not in ['success', 'error', 'canceled', 'aborted']:
+            sleep(self.poll_time)
             status = actions.get_status(job_id)
         return status
 
-    def act():
+    def act(self):
         """Agents override this with what they want to do.  Actions on the server should
            be invoked by calls to self.do_action(action, *args) rather than by direct
            calls to action(server_uuid, args) so as to process the result status properly.
@@ -65,8 +69,11 @@ class Agent:
 
         # Open DB Connection if none is provided.
         # Note that get_default_db_session examines sys.argv directly
+        # Also note if you want to re-use the old session you explicitly need to call
+        # my_agent.dwell(session = my_agent.session )
         if session is None:
             session = db_client.get_default_db_session()
+        self.session = session
 
         # This will store the VMs we need to work on, as returned by get_machines_in_state
         # In the original design we just got the first VM, but this is a problem if that VM
@@ -83,21 +90,22 @@ class Agent:
                     queue = session.get_machines_in_state(self.trigger_state)
                 #Having maybe fetched new items, try again.
                 if queue:
-                    self.vm_id, self.serveruuid = queue[0]["artifact_id"], queue[0]["artifact_uuid"]
-                    queue.pop(0)
+                    i = queue.pop(0)
+                    self.vm_id, self.serveruuid = i["artifact_id"], i["artifact_uuid"]
             except db_client.ConnectionError:
                 print("Connection error on DB." +
                       (" Will keep trying!" if persist else ""))
 
             if self.vm_id:
                 if self.serveruuid:
-                    print("Found action for server " + str(vm_id))
+                    print("Found action for server " + str(self.vm_id))
                     try:
                         self.act()
                         self.success()
-                    except:
+                    except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
+                        print("Exception: ", e)
                         self.failure()
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
@@ -109,7 +117,7 @@ class Agent:
                 else:
                     break
 
-    def do_action(job, *args):
+    def do_action(self, job, *args):
         """This can be called by an Agents act() function to run a job on the server
            and monitor the result.  It needs to be passed a function from eos_agents.actions.
            The function will be run with serveruuid as the first parameter and will return a
@@ -137,14 +145,14 @@ class Agent:
         else:
             print("Error: Status=" + str(status))
 
-    def success():
+    def success(self):
         """Override this if the Agent needs to do something else on success
         """
-        session.set_state(vm_id, self.success_state)
+        self.session.set_state(self.vm_id, self.success_state)
 
-    def failure():
+    def failure(self):
         """Override this if the Agent needs to clean up (eg. refund money) on
            failure.  You should not attempt any further actions on the VMs but may
            write to the database.
         """
-        session.set_state(vm_id, self.failure_state)
+        self.session.set_state(self.vm_id, self.failure_state)

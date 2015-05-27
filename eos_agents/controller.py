@@ -24,21 +24,9 @@ except ImportError:
     setproctitle = lambda t: None
 
 # Global state
-from eos_agents import db_client
-from eos_agents.agent import all_agents
+from eos_agents import db_client, load_all_agents
 jobs_running = {}
-
-# And import all the agents.  Could attempt to 'discover' them but that leads to other
-# problems, so if you add a new agent than add it to the list.
-from eos_agents import (
-            boost,
-            deboost,
-            predeboost,
-            prepare,
-            restart,
-            start,
-            stop ,
-)
+all_agents = load_all_agents()
 
 log = logging.getLogger(__name__)
 
