@@ -57,24 +57,25 @@ def main():
     parser.add_argument('-s', '--secretfile',  help='Say where the shared secret is kept')
     parser.add_argument('-u', '--url',         help='Explicitly set the base URL for eos-db calls')
     parser.add_argument('-p', '--poll-interval', help='Set the poll interval in seconds', default="5")
-    parser.add_argument('-q', '--quiet',       help='Suppress most messages', action='store_true')
+    parser.add_argument('-v', '--verbose',     help='Show more messages', action='store_true')
 
     args = parser.parse_args()
 
     if args.list:
         for k, v in all_agents.items():
-            print( "%s  => %s" % (k, v.success_state) )
+            print( "%s : %s  => %s" % (v.__class__.__name__, k, v.success_state) )
         exit()
 
-    logging.basicConfig(format="%(levelname)1.1s: %(message)s",
-                        level = (logging.WARNING if args.quiet else logging.INFO))
+    logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
+                        datefmt="%H:%M:%S",
+                        level = (logging.INFO if args.verbose else logging.WARNING))
 
     shared_password = 'test'
     if args.secretfile:
         with open(args.secretfile) as ssfile:
             shared_password=ssfile.read().rstrip('\n')
     else:
-        log.warning("Warning - using password '%s'.  Use -s <secretfile> to provide a proper one." % shared_password)
+        log.warning("Using password '%s'.  Use -s <secretfile> to provide a proper one." % shared_password)
 
 
     ### Get a handle on the eos-db
@@ -115,15 +116,19 @@ def get_required_actions(db_session):
        process the work I will return the agent name.
     """
 
-    # status_table = db_session.get_machine_state_counts()
+    try:
+        status_table = db_session.get_machine_state_counts()
+    except db_client.ConnectionError:
+        log.warn("Failed to connect to eos-db.")
+        return ()
 
-    # FIXME
+    # WORKAROUND
     #Since the call in eos-db is unimplemented just have a dummy dict for now.
     #Note that this starts all the agents and is silly but should kinda work.
-    status_table = {}
-    for k, v in all_agents.items():
-        status_table[k] = 1
-    #end FIXME
+#     status_table = {}
+#     for k, v in all_agents.items():
+#         status_table[k] = 1
+    #end WORKAROUND
 
     for k, v in status_table.items():
         if v > 0 and k in all_agents:

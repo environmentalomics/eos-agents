@@ -1,5 +1,4 @@
 from eos_agents import actions, db_client
-from requests.exceptions import ConnectionError
 from time import sleep
 
 # A global list of all active agents.
@@ -69,13 +68,24 @@ class Agent:
         if session is None:
             session = db_client.get_default_db_session()
 
+        # This will store the VMs we need to work on, as returned by get_machines_in_state
+        # In the original design we just got the first VM, but this is a problem if that VM
+        # gets jammed in some particular state and we just keep retrying it, never moving on
+        # to any others that want attention.
+        queue = []
+
         while True:
 
             # Look for Machines in target state
             try:
-                self.vm_id, self.serveruuid = session.get_machine_in_state(self.trigger_state)
-            except ConnectionError:
                 self.vm_id = None
+                if not queue:
+                    queue = session.get_machines_in_state(self.trigger_state)
+                #Having maybe fetched new items, try again.
+                if queue:
+                    self.vm_id, self.serveruuid = queue[0]["artifact_id"], queue[0]["artifact_uuid"]
+                    queue.pop(0)
+            except db_client.ConnectionError:
                 print("Connection error on DB." +
                       (" Will keep trying!" if persist else ""))
 
@@ -84,10 +94,11 @@ class Agent:
                     print("Found action for server " + str(vm_id))
                     try:
                         self.act()
+                        self.success()
                     except:
                         #We might get various exceptions.  As far as I can see, all of them
-                        #should just put the VM in the error state.
-                        session.set_state(self.vm_id, self.failure_state)
+                        #should call the failure() handler.
+                        self.failure()
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
                     #we can do with this server.

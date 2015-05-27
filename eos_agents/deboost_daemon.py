@@ -1,5 +1,4 @@
 from eos_agents import db_client
-from requests.exceptions import ConnectionError
 from time import sleep
 
 import logging

@@ -8,13 +8,19 @@ is initially set to -1.
 import sys
 import requests, json
 
+#Clients can import and trap this without caring that it belongs to requests under
+#the hood.
+ConnectionError = requests.exceptions.ConnectionError
+
 def catch_disconnection(dbfunc):
-    def safe_function(*args):
+    """Ben called this 'safe_function' but clearly this was a typo as swallowing
+       an exception is not a 'safe' thing to do."""
+    def unsafe_function(*args):
         try:
             return dbfunc(*args)
         except requests.exceptions.ConnectionError:
             return None
-    return safe_function
+    return unsafe_function
 
 
 def get_default_db_session():
@@ -84,13 +90,11 @@ class DBSession():
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
-        return self.getj("/states/" + "asdf" + "asdf")
+        return self.getj("/states")
 
-    #FIXME - I want to return the full list, not just a single item
-    def get_machine_in_state(self, state):
-        r = self.getj("/states/" + state)
-
-        return r[0]['artifact_id'], r[0]['artifact_uuid']
+    #Gets all the servers currently in the requested state.
+    def get_machines_in_state(self, state):
+        return self.getj("/states/" + state)
 
     #FIXME - This should fail if the VM is not in a de-boostable state, just as it
     # should when a manual deboost is tried on a machine not ready to be deboosted.
