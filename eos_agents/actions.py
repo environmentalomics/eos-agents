@@ -32,19 +32,19 @@ def restart_vm(vm_id):
     session.kill()
     return session.last_status, session.last_job_id
 
-def stop_vm(vm_id):
+def shutdown_vm(vm_id):
     """
     Attempt to stop a VM. Returns HTTP status from attempt and job_id in
     order to obtain future progress updates
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
-    session.stop_vm(vm_id)
+    session.shutdown_vm(vm_id)
     session.kill()
     return session.last_status, session.last_job_id
 
 def poweroff_vm(vm_id):
     """
-    Attempt to stop a VM. Returns HTTP status from attempt and job_id in
+    Attempt to hard-stop a VM. Returns HTTP status from attempt and job_id in
     order to obtain future progress updates
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)

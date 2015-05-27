@@ -42,83 +42,54 @@ class VCSession:
         self.headers['x-vcloud-authorization'] = r.headers['X-VCLOUD-AUTHORIZATION']
         self.last_status = r.status_code
 
+    def _vm_power_action(self, vm_id, action):
+        """ Attempts to apply an action (powerOn, powerOff, reboot, shutdown) to a VM
+            and capture the job ID for polling.
+        """
+        #This looks dicey...
+        #vm_id = str(vm_id)[3:42] + str("")
+
+        print ("Applying " + action + " to " + vm_id)
+        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/" + action,
+                          data=None,
+                          headers=self.headers,
+                          verify=False)
+        self.last_status = r.status_code
+        print (r.status_code)
+        print (r.text)
+        #Convert to XML
+        root = ET.fromstring(r.content)
+        if root is None:
+            self.last_job_id = None
+            return
+
+        self.last_job_id = root.attrib['id'].split(':')[3]
+        return root.attrib['id']
+
+
     def start_vm(self, vm_id):
         """
         Attempts to start a vm given by vm_id.
         """
-        vm_id = str(vm_id)[3:42] + str("")
-        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/powerOn",
-                          data=None,
-                          headers=self.headers,
-                          verify=False)
-        print (vm_id)
-        self.last_status = r.status_code
-        print (r.status_code)
-        print (r.text)
-        root = ET.fromstring(r.content)
-        if root is not None:
-            self.last_job_id = root.attrib['id'].split(':')[3]
-            return root.attrib['id']
-        else:
-            return
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        return self._vm_power_action(vm_id, 'powerOn')
 
     def restart_vm(self, vm_id):
         """
-        Attempts to start a vm given by vm_id.
+        Attempts to reboot a vm given by vm_id.
         """
-        vm_id = str(vm_id)[3:42] + str("")
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/reboot",
-                          data=None,
-                          headers=self.headers,
-                          verify=False)
-        self.last_status = r.status_code
-        root = ET.fromstring(r.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        return self._vm_power_action(vm_id, 'reboot')
 
     def poweroff_vm(self, vm_id):
         """
-        Attempts to start a vm given by vm_id.
+        Attempts to stop (uncleanly) a vm given by vm_id.
         """
-        vm_id = str(vm_id)[3:42] + str("")
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/powerOff",
-                          data=None,
-                          headers=self.headers,
-                          verify=False)
-        self.last_status = r.status_code
-        root = ET.fromstring(r.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        return self._vm_power_action(vm_id, 'powerOff')
 
     def shutdown_vm(self, vm_id):
         """
-
+        Attempts a clean shutdown of the given VM.
         """
-        vm_id = str(vm_id)[3:42] + str("")
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
-                          data=None,
-                          headers=self.headers,
-                          verify=False)
-        self.last_status = r.status_code
-        root = ET.fromstring(r.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
-
-    def stop_vm(self, vm_id):
-        """
-
-        """
-        vm_id = str(vm_id)[3:42] + str("")
-        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/shutdown",
-                          data=None,
-                          headers=self.headers,
-                          verify=False)
-        self.last_status = r.status_code
-        root = ET.fromstring(r.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        return self._vm_power_action(vm_id, 'shutdown')
 
     def set_system_memory_config(self, vapp_id, ram):
         vapp_id = str(vapp_id)[3:42] + str("")

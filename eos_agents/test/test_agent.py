@@ -17,7 +17,7 @@ class TestAgent(unittest.TestCase):
         pass
 
     # We'll fake session.get_machines_in_state, session.set_state, actions.restart_vm, and actions.get_status
-    @patch('eos_agents.actions.restart_vm', return_value=("???","1234"))
+    @patch('eos_agents.actions.restart_vm', return_value=("200","job1234"))
     @patch('eos_agents.actions.get_status', return_value="success")
     def test_restart_agent(self, mock_get_status, mock_restart):
 
@@ -40,7 +40,7 @@ class TestAgent(unittest.TestCase):
         #Check that it behaved
         self.assertEqual( mock_sesh.get_machines_in_state.call_args, call("Restarting") )
         self.assertEqual( mock_restart.call_args, call("mock_uuid") )
-        self.assertEqual( mock_get_status.call_args, call("1234") )
+        self.assertEqual( mock_get_status.call_args, call("job1234") )
         self.assertEqual( mock_sesh.set_state.call_args, call('mock_id', "Started") )
 
 if __name__ == '__main__':

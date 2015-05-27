@@ -74,6 +74,7 @@ class DBSession():
 
     def getj(self, *args):
         result = self.get(*args)
+        #FIXME - surely just result.json??
         return json.loads(result.text)
 
     def post(self, *args):
@@ -101,7 +102,7 @@ class DBSession():
     def do_deboost(self, vm_id):
         """Puts the given machine into state PreDeboosting so that the agents
            will come along and deboost it"""
-        r = self.post('/servers/%s/%s' (vm_id, 'PreDeboosting'))
+        r = self.post('/servers/%s/%s' % (vm_id, 'PreDeboosting'))
         if r.status_code[:1] != '2':
             raise Exception("Some Error???")
         return r
@@ -109,7 +110,7 @@ class DBSession():
     #If this fails, the agent will just end up triggering again, and this should be fine.
     @catch_disconnection
     def set_state(self, vm_id, state):
-        r = self.post('/servers/%s/%s' (vm_id, state))
+        r = self.post('/servers/%s/%s' % (vm_id, state))
 
 
     def get_uuid(self, vm_id):
