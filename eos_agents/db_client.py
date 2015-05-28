@@ -6,7 +6,7 @@ is initially set to -1.
 """
 
 import sys
-import requests, json
+import requests
 import logging
 
 #Clients can import and trap this without caring that it belongs to requests under
@@ -49,9 +49,6 @@ def get_default_db_session():
             elif arg.startswith('url='):
                 db_url = arg.split('=', 1)[1]
 
-        log.debug("Generated default DB session %s:%s@%s" %
-                   ( shared_username, '*' * len(shared_password), db_url ))
-
         return DBSession(shared_username, shared_password, db_url)
 
 class DBSession():
@@ -69,20 +66,19 @@ class DBSession():
         self.password = password
         self.db_url = db_url or 'http://localhost:6543'
 
+        log.debug("Starting DB session on %s:%s@%s" %
+                   ( self.username, '*' * len(self.password), self.db_url ))
+
+
     def get(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
         log.debug("GET from " + str(newargs))
         result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         #For my purposes I expect a 200 response every time
-        if str(result.status_code)[0] != '2':
+        if r.status_code not in range(200,207):
             raise ValueError("HTTP error response")
         return result
-
-    def getj(self, *args):
-        result = self.get(*args)
-        #FIXME - surely just result.json??
-        return json.loads(result.text)
 
     def post(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
@@ -95,15 +91,15 @@ class DBSession():
     #FIXME 2 - I need a list back
     @catch_disconnection
     def get_auto_deboost_item(self):
-        return self.getj('/states/boostexpired')
+        return self.get('/states/boostexpired').json()
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
-        return self.getj("/states")
+        return self.get("/states").json()
 
     #Gets all the servers currently in the requested state.
     def get_machines_in_state(self, state):
-        return self.getj("/states/" + state)
+        return self.get("/states/" + state).json()
 
     #FIXME - This should fail if the VM is not in a de-boostable state, just as it
     # should when a manual deboost is tried on a machine not ready to be deboosted.
@@ -111,25 +107,33 @@ class DBSession():
         """Puts the given machine into state PreDeboosting so that the agents
            will come along and deboost it"""
         r = self.post('/servers/%s/%s' % (vm_id, 'PreDeboosting'))
-        if r.status_code[:1] != '2':
+        if r.status_code not in range(200,207):
             raise Exception("Some Error???")
         return r
 
-    #If this fails, the agent will just end up triggering again, and this should be fine.
-    @catch_disconnection
+    #If this fails, the agent will just end up triggering again, and this should be fine,
+    #as long as there is not a tight loop.
     def set_state(self, vm_id, state):
-        r = self.post('/servers/%s/%s' % (vm_id, state))
+        """Sets the state of the VM in the database.  Returns True on success, False
+           on failure and None if there was a netowrk error.
+        """
+        r = None
+        try:
+            r = self.post('/servers/by_id/%s/%s' % (vm_id, state))
+        except ConnectionError:
+            return None
+        return (r.status_code in range(200,207))
 
 
     def get_uuid(self, vm_id):
-        return self.getj('/servers/by_id/%s' % vm_id)['artifact_uuid']
+        return (self.get('/servers/by_id/%s' % vm_id).json())['artifact_uuid']
 
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = self.getj('/servers/by_id/%s' % vm_id)
+        r = self.get('/servers/by_id/%s' % vm_id).json()
         vm_name = r['artifact_uuid']
-        r2 = self.getj('/servers/' + vm_name + '/specification')
+        r2 = self.get('/servers/' + vm_name + '/specification').json()
         return r2['cores'], r2['ram']
 
     @catch_disconnection

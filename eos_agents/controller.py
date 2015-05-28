@@ -56,7 +56,7 @@ def main():
 
     logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
                         datefmt="%H:%M:%S",
-                        level = (logging.INFO if args.verbose else logging.WARNING))
+                        level = (logging.DEBUG if args.verbose else logging.WARNING))
 
     shared_password = 'test'
     if args.secretfile:

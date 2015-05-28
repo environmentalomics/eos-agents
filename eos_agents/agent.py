@@ -72,7 +72,7 @@ class Agent:
         #being run directly and not via the controller.
         logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
                             datefmt="%H:%M:%S",
-                            level = logging.TRACE)
+                            level = logging.DEBUG)
 
         # Guess params for DB Connection if none is provided.
         # Note that get_default_db_session examines sys.argv directly
@@ -108,21 +108,25 @@ class Agent:
                     log.debug("Found action for server " + str(self.vm_id))
                     try:
                         self.act()
-                        self.success()
                     except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
-                        log.debug("Exception: ", e)
+                        log.debug("Exception: %s", e)
                         self.failure()
+                    #The point of this 'if' is that should setting the status fail for some
+                    #reason we at least take a pause before racing round to repeat the action.
+                    if self.success():
+                        continue
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
                     #we can do with this server.
                     session.set_state(self.vm_id, "Error")
+
+            #If we ran out of jobs, or if something failed, either pause or quit.
+            if persist:
+                sleep(self.sleep_time)
             else:
-                if persist:
-                    sleep(self.sleep_time)
-                else:
-                    break
+                break
 
     def do_action(self, job, *args):
         """This can be called by an Agents act() function to run a job on the server
