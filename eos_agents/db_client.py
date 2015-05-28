@@ -76,7 +76,7 @@ class DBSession():
 
     def get(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
-        log.debug("GET from " + str(newargs)
+        log.debug("GET from " + str(newargs))
         result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         #For my purposes I expect a 200 response every time
