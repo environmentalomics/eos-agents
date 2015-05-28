@@ -7,10 +7,13 @@ is initially set to -1.
 
 import sys
 import requests, json
+import logging
 
 #Clients can import and trap this without caring that it belongs to requests under
 #the hood.
 ConnectionError = requests.exceptions.ConnectionError
+
+log = logging.getLogger(__name__)
 
 def catch_disconnection(dbfunc):
     """Ben called this 'safe_function' but clearly this was a typo as swallowing
@@ -46,6 +49,9 @@ def get_default_db_session():
             elif arg.startswith('url='):
                 db_url = arg.split('=', 1)[1]
 
+        log.debug("Generated default DB session %s:%s@%s" %
+                   ( shared_username, '*' * len(shared_password), db_url ))
+
         return DBSession(shared_username, shared_password, db_url)
 
 class DBSession():
@@ -65,6 +71,7 @@ class DBSession():
 
     def get(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
+        log.debug("GET from " + str(newargs))
         result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         #For my purposes I expect a 200 response every time
@@ -79,6 +86,7 @@ class DBSession():
 
     def post(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
+        log.debug("POST to " + str(newargs))
         result = requests.post(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         return result

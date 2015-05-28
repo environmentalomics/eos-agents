@@ -1,7 +1,8 @@
 from eos_agents import actions, db_client, all_agents
 from time import sleep
 
-# FIXME - use logging!
+import logging
+log = logging.getLogger(__name__)
 
 class JobException(Exception):
     pass
@@ -67,7 +68,13 @@ class Agent:
 
     def dwell(self, session=None, persist=True):
 
-        # Open DB Connection if none is provided.
+        #This will onyl be applied if no logging was already set - ie. the agent is
+        #being run directly and not via the controller.
+        logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
+                            datefmt="%H:%M:%S",
+                            level = logging.TRACE)
+
+        # Guess params for DB Connection if none is provided.
         # Note that get_default_db_session examines sys.argv directly
         # Also note if you want to re-use the old session you explicitly need to call
         # my_agent.dwell(session = my_agent.session )
@@ -93,19 +100,19 @@ class Agent:
                     i = queue.pop(0)
                     self.vm_id, self.serveruuid = i["artifact_id"], i["artifact_uuid"]
             except db_client.ConnectionError:
-                print("Connection error on DB." +
-                      (" Will keep trying!" if persist else ""))
+                log.warning("Connection error on DB." +
+                            (" Will keep trying!" if persist else ""))
 
             if self.vm_id:
                 if self.serveruuid:
-                    print("Found action for server " + str(self.vm_id))
+                    log.debug("Found action for server " + str(self.vm_id))
                     try:
                         self.act()
                         self.success()
                     except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
-                        print("Exception: ", e)
+                        log.debug("Exception: ", e)
                         self.failure()
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
@@ -128,19 +135,18 @@ class Agent:
             raise TypeError("self.serveruuid is not set")
 
         status_code, job_id = job(self.serveruuid, *args)  # Execute VM action
-        print("Waiting for response")
+        log.debug("Waiting for response on job " + str(job_id))
         status = self.wait_on_job(job_id)  # Wait for job to complete
 
         if status == "success":
             #TODO - Ben's original plan was to report the progress of each action in
             #order to provide a more granular progress meter for the user.  We could emit
             #progress events here.
-            #FIXME - this should be a log message
-            print("Success")
+            log.debug("Success on job " + str(job_id))
             return status
         elif status in ("error", "canceled", "aborted"):
             #FIXME - this should be a log message, with more details for debugging
-            print(status)  # Machine should now go to the failure_state
+            log.debug(status + " on job " + str(job_id))  # Machine should now go to the failure_state
             raise JobException("%s - %s" % (self.serveruuid, status))
         else:
             print("Error: Status=" + str(status))
