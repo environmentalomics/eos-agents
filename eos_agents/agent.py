@@ -68,9 +68,9 @@ class Agent:
 
     def dwell(self, session=None, persist=True):
 
-        #This will onyl be applied if no logging was already set - ie. the agent is
+        #This should only be applied if no logging was already set - ie. the agent is
         #being run directly and not via the controller.
-        logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
+        logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s | %(name)s",
                             datefmt="%H:%M:%S",
                             level = logging.DEBUG)
 

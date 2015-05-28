@@ -15,6 +15,10 @@ ConnectionError = requests.exceptions.ConnectionError
 
 log = logging.getLogger(__name__)
 
+#I don't need all the chatter from requests, even if the root logger is set to
+#debugging.
+logging.getLogger('requests').setLevel(logging.ERROR)
+
 def catch_disconnection(dbfunc):
     """Ben called this 'safe_function' but clearly this was a typo as swallowing
        an exception is not a 'safe' thing to do."""
@@ -72,11 +76,11 @@ class DBSession():
 
     def get(self, *args):
         newargs = ( self.db_url + args[0], ) + args[1:]
-        log.debug("GET from " + str(newargs))
+        log.debug("GET from " + str(newargs)
         result = requests.get(*newargs, auth=(self.username, self.password))
         self.last_status = result.status_code
         #For my purposes I expect a 200 response every time
-        if r.status_code not in range(200,207):
+        if result.status_code not in range(200,207):
             raise ValueError("HTTP error response")
         return result
 

@@ -6,6 +6,9 @@ Yet another VCD client module for Python.
 import requests
 import xml.etree.ElementTree as ET
 
+import logging
+log = logging.getLogger(__name__)
+
 #This is almost certainly a Good Idea
 from requests.packages import urllib3
 urllib3.disable_warnings()
@@ -33,7 +36,7 @@ class VCSession:
         self.last_status = -1
         self.last_job_id = -1
 
-        print("Connecting to " + endpoint + 'sessions')
+        log.debug("Connecting to " + endpoint + 'sessions')
 
         r = requests.post(endpoint + 'sessions',
                           headers=self.headers,
@@ -49,14 +52,14 @@ class VCSession:
         #This looks dicey...
         #vm_id = str(vm_id)[3:42] + str("")
 
-        print ("Applying " + action + " to " + vm_id)
+        log.debug("Applying " + action + " to " + vm_id)
         r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/" + action,
                           data=None,
                           headers=self.headers,
                           verify=False)
         self.last_status = r.status_code
-        print (r.status_code)
-        print (r.text)
+        log.debug(r.status_code)
+        log.debug(r.text)
         #Convert to XML
         root = ET.fromstring(r.content)
         if root is None:
