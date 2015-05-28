@@ -52,8 +52,8 @@ class VCSession:
         #This looks dicey...
         #vm_id = str(vm_id)[3:42] + str("")
 
-        log.debug("Applying " + action + " to " + vm_id)
-        r = requests.post(self.endpoint + "/vApp/" + str(vm_id) + "/power/action/" + action,
+        log.debug("Action: " + self.endpoint + "/vApp/" + vm_id + "/power/action/" + action)
+        r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/" + action,
                           data=None,
                           headers=self.headers,
                           verify=False)
