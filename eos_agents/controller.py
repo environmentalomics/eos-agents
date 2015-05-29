@@ -29,6 +29,8 @@ jobs_running = {}
 all_agents = load_all_agents()
 
 log = logging.getLogger(__name__)
+#Used to suppress multiple warnings on failed Db connection:
+fail_flag = False
 
 def main():
 
@@ -58,7 +60,7 @@ def main():
 
     logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
                         datefmt="%H:%M:%S",
-                        level = (logging.DEBUG if args.verbose else logging.WARNING))
+                        level = (logging.DEBUG if args.verbose else logging.INFO))
 
     shared_password = 'test'
     if args.secretfile:
@@ -106,11 +108,14 @@ def get_required_actions(db_session):
        of status=>count.  Where the count > 0 and where I have a suitable agent to
        process the work I will return the agent name.
     """
-
+    global fail_flag
     try:
         status_table = db_session.get_machine_state_counts()
+        fail_flag = False
     except db_client.ConnectionError:
-        log.warn("Failed to connect to eos-db.")
+        #In non-verbose mode suppress multiple connection error messages.
+        (log.debug if fail_flag else log.warn)("Failed to connect to eos-db.")
+        fail_flag = True
         return ()
 
     # WORKAROUND
