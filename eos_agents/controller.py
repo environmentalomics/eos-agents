@@ -51,7 +51,8 @@ def main():
 
     if args.list:
         for k, v in all_agents.items():
-            print( "%s : %s  => %s" % (v.__class__.__name__, k, v.success_state) )
+            print( "%20.20s : %-16.16s  => %-16.16s (%s)" %
+                   (v.__class__.__name__, k, v.success_state, v.failure_state) )
         exit()
 
     logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",

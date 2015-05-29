@@ -108,15 +108,15 @@ class Agent:
                     log.debug("Found action for server " + str(self.vm_id))
                     try:
                         self.act()
+                        #The point of this 'if' is that should setting the status fail for some
+                        #reason we at least take a pause before racing round to repeat the action.
+                        if self.success():
+                            continue
                     except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
                         log.debug("Exception: %s", e)
                         self.failure()
-                    #The point of this 'if' is that should setting the status fail for some
-                    #reason we at least take a pause before racing round to repeat the action.
-                    if self.success():
-                        continue
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
                     #we can do with this server.
