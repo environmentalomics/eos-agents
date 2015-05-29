@@ -105,7 +105,7 @@ class Agent:
 
             if self.vm_id:
                 if self.serveruuid:
-                    log.debug("Found action for server " + str(self.vm_id))
+                    log.info("Acting on server " + str(self.vm_id) + " in state " + self.trigger_state)
                     try:
                         self.act()
                         #The point of this 'if' is that should setting the status fail for some
