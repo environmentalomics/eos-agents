@@ -8,7 +8,7 @@ class Predeboost_Agent(agent.Agent):
     success_state = "Pre_Deboosted"
     failure_state = "Started"
 
-    def act():
+    def act(self):
         self.do_action(actions.shutdown_vm)
 
 predeboost_agent = Predeboost_Agent()
