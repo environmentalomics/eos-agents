@@ -85,6 +85,7 @@ def main():
 
     poll_interval = int(args.poll_interval)
 
+    log.info("Starting the agent herder with poll interval %i." % poll_interval)
     try:
         while True:
             for a in get_required_actions(db_session):
@@ -155,7 +156,7 @@ def sleep_n_reap(n):
                 sigrcvd = status %  0x0100
                 jobname = jobs_running[pid]
 
-                log.info("Reaped job %s, pid=%i ret=%i sig=%i" % (jobname, pid, retval, sigrcvd))
+                log.debug("Reaped job %s, pid=%i ret=%i sig=%i" % (jobname, pid, retval, sigrcvd))
                 if retval or sigrcvd:
                     log.warning("WARNING - job %s did not exit normally." % jobname)
                 del jobs_running[pid]
@@ -182,7 +183,7 @@ def reap_all_jobs():
     reaped = 0
     errors = 0
     # We expect to get back exactly what is in the jobs_running table
-    log.info("Waiting to reap %i remaining jobs" % len(jobs_running))
+    log.debug("Waiting to reap %i remaining jobs" % len(jobs_running))
     while True:
         try:
             pid, status = os.waitpid(-1, 0)
@@ -195,16 +196,16 @@ def reap_all_jobs():
         except ChildProcessError:
             #we is done
             break
-    (log.warning if errors else log.info)("Reaped %i jobs with %i non-zero exit" % (reaped, errors))
+    (log.warning if errors else log.debug)("Reaped %i jobs with %i non-zero exit" % (reaped, errors))
 
     return reaped
 
 def start_job(name, func, *args, **kwargs):
     if name in jobs_running.values():
-        log.info("Job %s already running." % name)
+        log.debug("Job %s already running." % name)
         return False
     else:
-        log.info("Starting job %s" % name)
+        log.debug("Starting job %s" % name)
 
         pid = os.fork()
         if pid == 0:
