@@ -11,6 +11,7 @@ def load_all_agents():
                 prepare,
                 restart,
                 start,
+                start_boosted,
                 stop ,
     )
 

@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# See start.py for main comments.
+
 from eos_agents import agent
 
 class Deboost_Agent(agent.Agent):

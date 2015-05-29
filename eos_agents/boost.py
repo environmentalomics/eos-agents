@@ -1,22 +1,24 @@
 #!/usr/bin/python3
 
+# See start.py for main comments.
+
 from eos_agents import agent, actions
 
+# Really this should be "Prepared_Agent"
 class Boost_Agent(agent.Agent):
 
-    #FIXME - The states here are all wrong.
     trigger_state = "Prepared"
-    success_state = "Starting"
-    failure_state = "Error"
+    success_state = "Starting_Boosted"
+    failure_state = "Pre_Deboosting"
 
     def act(self):
+        #Set transitional state
         self.session.set_state_to_boosting(self.vm_id)
 
         cores, ram = self.session.get_latest_specification(self.vm_id)
         self.do_action(actions.boost_vm_memory, ram)
         self.do_action(actions.boost_vm_cores, cores)
 
-#This has the side effect of registering the instance, even if it isn't run.
 boost_agent = Boost_Agent()
 if __name__ == '__main__':
     boost_agent.dwell()

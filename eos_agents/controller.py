@@ -49,6 +49,7 @@ def main():
 
     args = parser.parse_args()
 
+    #Note that agents will only be loaded if they are listed in __init__.py
     if args.list:
         for k, v in all_agents.items():
             print( "%20.20s : %-16.16s  => %-16.16s (%s)" %
