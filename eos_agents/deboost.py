@@ -12,7 +12,7 @@ class Deboost_Agent(agent.Agent):
     failure_state = "Error"
 
     def act(self):
-        self.session.set_state_to_deboosting(self.vm_id)
+        self.session.set_state(self.vm_id, "Deboosting")
 
         cores, ram = self.session.get_latest_specification(self.vm_id)
         self.do_action(actions.boost_vm_memory, ram)

@@ -11,6 +11,6 @@ class Predeboost_Agent(agent.Agent):
     def act(self):
         self.do_action(actions.shutdown_vm)
 
-predeboost_agent = Predeboost_Agent()
+my_agent = Predeboost_Agent()
 if __name__ == '__main__':
-    predeboost_agent.dwell()
+    my_agent.dwell()

@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+# See start.py for main comments.
+
 from eos_agents import agent, actions
 
 class Prepare_Agent(agent.Agent):
@@ -11,6 +13,6 @@ class Prepare_Agent(agent.Agent):
     def act(self):
         self.do_action(actions.shutdown_vm)
 
-prepare_agent = Prepare_Agent()
+my_agent = Prepare_Agent()
 if __name__ == '__main__':
-    prepare_agent.dwell()
+    my_agent.dwell()
