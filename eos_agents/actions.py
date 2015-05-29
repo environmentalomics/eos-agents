@@ -24,8 +24,8 @@ def start_vm(vm_id):
 
 def restart_vm(vm_id):
     """
-    Attempt to start a VM. Returns HTTP status from attempt and job id in
-    order to obtain future progress updates.
+    Attempt to reboot a VM (soft reboot). Returns HTTP status from attempt and
+    job id in order to obtain future progress updates.
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
     session.restart_vm(vm_id)
@@ -34,7 +34,7 @@ def restart_vm(vm_id):
 
 def shutdown_vm(vm_id):
     """
-    Attempt to stop a VM. Returns HTTP status from attempt and job_id in
+    Attempt to cleanly shutdown a VM. Returns HTTP status from attempt and job_id in
     order to obtain future progress updates
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)

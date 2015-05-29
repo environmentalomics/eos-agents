@@ -9,7 +9,7 @@ class Prepare_Agent(agent.Agent):
     failure_state = "Started"
 
     def act(self):
-        self.do_action(actions.stop_vm)
+        self.do_action(actions.shutdown_vm)
 
 prepare_agent = Prepare_Agent()
 if __name__ == '__main__':
