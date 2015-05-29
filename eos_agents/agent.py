@@ -115,7 +115,7 @@ class Agent:
                     except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
-                        log.debug("Exception: %s", e)
+                        log.info("Exception: %s", e)
                         self.failure()
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
