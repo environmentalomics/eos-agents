@@ -2,11 +2,10 @@
 
 # See start.py for main comments.
 
-from eos_agents import agent
+from eos_agents import agent, actions
 
 class Deboost_Agent(agent.Agent):
 
-    #FIXME - The states here are all wrong.
     trigger_state = "Pre_Deboosted"
     success_state = "Starting"
     failure_state = "Error"
@@ -19,6 +18,6 @@ class Deboost_Agent(agent.Agent):
         self.do_action(actions.boost_vm_cores, cores)
 
 #This has the side effect of registering the instance, even if it isn't run.
-deboost_agent = Deboost_Agent()
+my_agent = Deboost_Agent()
 if __name__ == '__main__':
-    deboost_agent.dwell()
+    my_agent.dwell()

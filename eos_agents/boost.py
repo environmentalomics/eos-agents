@@ -19,6 +19,6 @@ class Boost_Agent(agent.Agent):
         self.do_action(actions.boost_vm_memory, ram)
         self.do_action(actions.boost_vm_cores, cores)
 
-boost_agent = Boost_Agent()
+my_agent = Boost_Agent()
 if __name__ == '__main__':
-    boost_agent.dwell()
+    my_agent.dwell()
