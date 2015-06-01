@@ -117,8 +117,8 @@ class VCSession:
 
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/memory",
-                                data=xmlstring, headers=self.headers, verify=False)
+        r = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/memory",
+                         data=xmlstring, headers=self.headers, verify=False)
 
         return self._process_vc_response(r)
 
@@ -128,8 +128,8 @@ class VCSession:
 
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/cpu",
-                                data=xmlstring, headers=self.headers, verify=False)
+        r = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/cpu",
+                         data=xmlstring, headers=self.headers, verify=False)
 
         return self._process_vc_response(r)
 
