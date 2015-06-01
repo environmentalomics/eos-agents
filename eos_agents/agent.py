@@ -33,6 +33,8 @@ class Agent:
     sleep_time = 5
     #Delay when polling for updates from VCD
     poll_time = 2
+    #You can opt to ignore BAD_REQUEST type errors
+    ignore_bad_requests = False
 
     def __init__(self):
         """All subclasses should ensure that this constructor is called, if they
@@ -146,7 +148,14 @@ class Agent:
 
         #This may throw actions.BadRequestException or various other exceptions, which the
         #actual agent class may or may not wish to trap.
-        status_code, job_id = job(self.serveruuid, *args)  # Execute VM action
+        status_code, job_id = None, None
+        try:
+            status_code, job_id = job(self.serveruuid, *args)  # Execute VM action
+        except actions.BadRequestException as e:
+            if self.ignore_bad_requests:
+                log.info("Ignoring error: " + str(e))
+                return
+            raise e
 
         log.debug("Waiting for response on job " + str(job_id))
         status = self.wait_on_job(job_id)  # Wait for job to complete
