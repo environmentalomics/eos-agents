@@ -18,7 +18,7 @@ urllib3.disable_warnings()
 #Handy constant
 ns_vc = "http://www.vmware.com/vcloud/v1.5"
 
-class BadRequestException:
+class BadRequestException(Exception):
     """Specific exception raised for '400 BAD_REQUEST'
     """
     pass
