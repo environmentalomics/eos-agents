@@ -7,9 +7,9 @@ at interfacing with vCloud.
 """
 
 # FIXME - These actions should be stripped of the session start/stop boilerplate
-# and instead should inherit the session from the Agent.
+# which can go into a decorator.
 
-from eos_agents.vc_client import VCSession
+from eos_agents.vc_client import VCSession, BadRequestException
 from eos_agents.settings import VCDetails as VCD
 
 def start_vm(vm_id):
@@ -73,7 +73,7 @@ def boost_vm_cores(vm_id, cores):
 
 def get_status(job_id):
     """
-    
+    Poll the status of an active job
     """
     session = VCSession(VCD.username, VCD.password, VCD.org, VCD.endpoint)
     job_status = session.get_task_status(job_id)

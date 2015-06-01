@@ -18,6 +18,11 @@ urllib3.disable_warnings()
 #Handy constant
 ns_vc = "http://www.vmware.com/vcloud/v1.5"
 
+class BadRequestException:
+    """Specific exception raised for '400 BAD_REQUEST'
+    """
+    pass
+
 class VCSession:
 
     def __init__(self, username, password, organisation, endpoint):
@@ -51,24 +56,35 @@ class VCSession:
         """
         #This looks dicey...
         #vm_id = str(vm_id)[3:42] + str("")
+        self.last_job_id = None
 
         log.debug("Action: " + self.endpoint + "/vApp/" + vm_id + "/power/action/" + action)
         r = requests.post(self.endpoint + "/vApp/" + vm_id + "/power/action/" + action,
                           data=None,
                           headers=self.headers,
                           verify=False)
-        self.last_status = r.status_code
+
+        return self._process_vc_response(r)
+
+    def _process_vc_response(self, content):
+        self.last_status = "%i %s" % (r.status_code, r.reason)
         log.debug(r.status_code)
         log.debug(r.text)
-        #Convert to XML
-        root = ET.fromstring(r.content)
-        if root is None:
-            self.last_job_id = None
-            return
 
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        #Convert to XML.  If that fails, just let the exception propogate.
+        root = ET.fromstring(content)
 
+        #So we know root must at least be valid XML
+        if 'id' in root.attrib:
+            self.last_job_id = root.attrib['id'].split(':')[3]
+            return root.attrib['id']
+        elif root.attrib.get('minorErrorCode') == 'BAD_REQUEST':
+            #Trying to, eg., power off a machine which is already off,
+            #produces minorErrorCode="BAD_REQUEST"
+            raise BadRequestException(root.attrib.get('message', 'Unknown'))
+
+        #Failing that, I'm out of ideas.  Caller should examine self.last_status
+        raise ValueError("Unrecognised response from VCloud.")
 
     def start_vm(self, vm_id):
         """
@@ -108,10 +124,10 @@ class VCSession:
                 tree = ET.parse("templates/16gb_memory.xml")
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory", data=xmlstring, headers=self.headers, verify=False)
-        root = ET.fromstring(response.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory",
+                                data=xmlstring, headers=self.headers, verify=False)
+
+        return self._process_vc_response(r)
 
     def set_system_cpu_config(self, vapp_id, cores):
         vapp_id = str(vapp_id)[3:42] + str("")
@@ -127,10 +143,10 @@ class VCSession:
                 tree = ET.parse("templates/1_core.xml")
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/cpu", data=xmlstring, headers=self.headers, verify=False)
-        root = ET.fromstring(response.content)
-        self.last_job_id = root.attrib['id'].split(':')[3]
-        return root.attrib['id']
+        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/cpu",
+                                data=xmlstring, headers=self.headers, verify=False)
+
+        return self._process_vc_response(r)
 
     def boost_vm(self):
         pass
@@ -204,13 +220,6 @@ class VCSession:
         root = ET.fromstring(response.content)
         return root.attrib['status']
 
-    def poweron_vapp(self, vapp_id):
-        vapp_id = str(vapp_id)[3:42] + str("")
-        response = requests.post(self.endpoint + "/vApp/" + vapp_id + "/power/action/powerOn", data=None, headers=self.headers,
-                          verify=False)
-        root = ET.fromstring(response.content)
-        return root.attrib['id']
-
     def get_all_vms_for_user(self, username):
         """Obtain all VMs for a given user, assuming that each VApp has only one VM
         """
@@ -244,6 +253,7 @@ class VCSession:
         """
         Ends the session represented by the current session token self.token.
         """
-        response = requests.delete(self.endpoint + '/session', data=None, headers=self.headers,
+        response = requests.delete(self.endpoint + '/session',
+                                   data=None, headers=self.headers,
                                    verify=False)
         self.headers = None

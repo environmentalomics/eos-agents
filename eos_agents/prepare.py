@@ -11,7 +11,11 @@ class Prepare_Agent(agent.Agent):
     failure_state = "Started"
 
     def act(self):
-        self.do_action(actions.shutdown_vm)
+        try:
+            self.do_action(actions.shutdown_vm)
+        except BadRequestException as e:
+            #Most likely this means the machine is already down.  Proceed.
+            agent.log.info("Ignoring error " + str(e))
 
 my_agent = Prepare_Agent()
 if __name__ == '__main__':

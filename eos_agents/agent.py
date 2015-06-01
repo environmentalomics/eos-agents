@@ -1,3 +1,7 @@
+"""Base class for all agents.  This class should be able to run unmodified with
+   an alternative actions driver.
+"""
+
 from eos_agents import actions, db_client, all_agents
 from time import sleep
 
@@ -5,6 +9,8 @@ import logging
 log = logging.getLogger(__name__)
 
 class JobException(Exception):
+    """Exception for when job starts OK but then fails.
+    """
     pass
 
 class Agent:
@@ -138,7 +144,10 @@ class Agent:
             #Only possible if do_action was called outside the regular dwell() loop.
             raise TypeError("self.serveruuid is not set")
 
+        #This may throw actions.BadRequestException or various other exceptions, which the
+        #actual agent class may or may not wish to trap.
         status_code, job_id = job(self.serveruuid, *args)  # Execute VM action
+
         log.debug("Waiting for response on job " + str(job_id))
         status = self.wait_on_job(job_id)  # Wait for job to complete
 
