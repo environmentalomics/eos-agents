@@ -7,16 +7,20 @@
 """
 
 import unittest
+import logging
 from unittest.mock import patch
 from eos_agents import controller
 
 class TestController(unittest.TestCase):
 
     def setUp(self):
-        pass
+        #No log please
+        logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
+                            datefmt="%H:%M:%S",
+                            level = logging.CRITICAL)
 
     def test_listagents(self):
-        self.assertEqual(len(controller.all_agents), 7)
+        self.assertEqual(len(controller.all_agents), 8)
 
 
     def test_reap_no_job(self):

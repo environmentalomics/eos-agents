@@ -6,6 +6,7 @@
    dependency.  Therefore mock calls to both the database and the VM controller.
 """
 
+import logging
 import unittest
 from unittest.mock import patch, call, Mock
 
@@ -14,7 +15,10 @@ from eos_agents import all_agents, actions
 class TestAgent(unittest.TestCase):
 
     def setUp(self):
-        pass
+        #No log please
+        logging.basicConfig(format="%(levelname)4.4s@%(asctime)s | %(message)s",
+                            datefmt="%H:%M:%S",
+                            level = logging.CRITICAL)
 
     # We'll fake session.get_machines_in_state, session.set_state, actions.restart_vm, and actions.get_status
     @patch('eos_agents.actions.restart_vm', return_value=("200","job1234"))

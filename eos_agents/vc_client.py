@@ -2,7 +2,7 @@
 Yet another VCD client module for Python.
 
 """
-
+import os
 import requests
 import xml.etree.ElementTree as ET
 
@@ -17,6 +17,10 @@ urllib3.disable_warnings()
 
 #Handy constant
 ns_vc = "http://www.vmware.com/vcloud/v1.5"
+
+#Find the templates, and throw an early error if they are missing.
+templates_folder = os.path.join(os.path.dirname(__file__), 'templates')
+os.listdir(templates_folder)
 
 class BadRequestException(Exception):
     """Specific exception raised for '400 BAD_REQUEST'
@@ -42,7 +46,6 @@ class VCSession:
         self.last_job_id = -1
 
         log.debug("Connecting to " + endpoint + 'sessions')
-
         r = requests.post(endpoint + 'sessions',
                           headers=self.headers,
                           auth=(username + '@' + organisation, password),
@@ -54,8 +57,6 @@ class VCSession:
         """ Attempts to apply an action (powerOn, powerOff, reboot, shutdown) to a VM
             and capture the job ID for polling.
         """
-        #This looks dicey...
-        #vm_id = str(vm_id)[3:42] + str("")
         self.last_job_id = None
 
         log.debug("Action: " + self.endpoint + "/vApp/" + vm_id + "/power/action/" + action)
@@ -110,40 +111,24 @@ class VCSession:
         """
         return self._vm_power_action(vm_id, 'shutdown')
 
-    def set_system_memory_config(self, vapp_id, ram):
-        vapp_id = str(vapp_id)[3:42] + str("")
-        if ram == 16:
-                tree = ET.parse("templates/16gb_memory.xml")
-        elif ram == 40:
-                tree = ET.parse("templates/40gb_memory.xml")
-        elif ram == 140:
-                tree = ET.parse("templates/140gb_memory.xml")
-        elif ram == 500:
-                tree = ET.parse("templates/500gb_memory.xml")
-        else:
-                tree = ET.parse("templates/16gb_memory.xml")
+    def set_system_memory_config(self, vm_id, ram):
+        #If there is no template file we can conclude the quantity of RAM is invalid
+        tree = ET.parse(os.path.join(templates_folder, "%igb_memory.xml" % ram))
+
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/memory",
+        response = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/memory",
                                 data=xmlstring, headers=self.headers, verify=False)
 
         return self._process_vc_response(r)
 
-    def set_system_cpu_config(self, vapp_id, cores):
-        vapp_id = str(vapp_id)[3:42] + str("")
-        if cores == 1:
-                tree = ET.parse("templates/1_core.xml")
-        elif cores == 2:
-                tree = ET.parse("templates/2_cores.xml")
-        elif cores == 8:
-                tree = ET.parse("templates/8_cores.xml")
-        elif cores == 16:
-                tree = ET.parse("templates/16_cores.xml")
-        else:
-                tree = ET.parse("templates/1_core.xml")
+    def set_system_cpu_config(self, vm_id, cores):
+        #If there is no template file we can conclude the number of cores is invalid
+        tree = ET.parse(os.path.join(templates_folder, "%i_cores.xml" % cores))
+
         root = tree.getroot()
         xmlstring = ET.tostring(root, encoding='utf8', method='xml')
-        response = requests.put(self.endpoint + "/vApp/" + vapp_id + "/virtualHardwareSection/cpu",
+        response = requests.put(self.endpoint + "/vApp/" + vm_id + "/virtualHardwareSection/cpu",
                                 data=xmlstring, headers=self.headers, verify=False)
 
         return self._process_vc_response(r)
