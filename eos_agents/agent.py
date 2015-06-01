@@ -99,7 +99,7 @@ class Agent:
                 if queue:
                     i = queue.pop(0)
                     self.vm_id, self.serveruuid = i["artifact_id"], i["artifact_uuid"]
-            except db_client.ConnectionError:
+            except (db_client.ConnectionError, ValueError):
                 log.warning("Connection error on DB." +
                             (" Will keep trying!" if persist else ""))
 
@@ -115,7 +115,7 @@ class Agent:
                     except Exception as e:
                         #We might get various exceptions.  As far as I can see, all of them
                         #should call the failure() handler.
-                        log.info("Exception: %s", e)
+                        log.warning("Exception: %s", e)
                         self.failure()
                 else:
                     #If there is no serveruuid then there is a database error and nothing more
