@@ -3,18 +3,13 @@
 	xmlns:rasd="http://schemas.dmtf.org/wbem/wscim/1/cim-schema/2/CIM_ResourceAllocationSettingData"
 	xmlns:vcloud="http://www.vmware.com/vcloud/v1.5"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	vcloud:href="https://vcloud.example.com/api/vApp/vm-89c84bd6-c6f2-4e4c-8a7d-c44a3489e2e4/virtualHardwareSection/memory"
 	vcloud:type="application/vnd.vmware.vcloud.rasdItem+xml">
-	<rasd:AllocationUnits>byte * 2^20</rasd:AllocationUnits>
-	<rasd:Description>Memory Size</rasd:Description>
-	<rasd:ElementName>8192 MB of memory</rasd:ElementName>
-	<rasd:InstanceID>5</rasd:InstanceID>
+	<rasd:AllocationUnits>hertz * 10^6</rasd:AllocationUnits>
+	<rasd:Description>Number of Virtual CPUs</rasd:Description>
+	<rasd:ElementName>16 virtual CPU(s)</rasd:ElementName>
+	<rasd:InstanceID>1</rasd:InstanceID>
 	<rasd:Reservation>0</rasd:Reservation>
-	<rasd:ResourceType>4</rasd:ResourceType>
-	<rasd:VirtualQuantity>8192</rasd:VirtualQuantity>
+	<rasd:ResourceType>3</rasd:ResourceType>
+	<rasd:VirtualQuantity>16</rasd:VirtualQuantity>
 	<rasd:Weight>0</rasd:Weight>
-	<vcloud:Link
-		href="https://vcloud.example.com/api/vApp/vm-89c84bd6-c6f2-4e4c-8a7d-c44a3489e2e4/virtualHardwareSection/memory"
-		rel="edit"
-		type="application/vnd.vmware.vcloud.rasdItem+xml"/>
 </vcloud:Item>
