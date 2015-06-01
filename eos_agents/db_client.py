@@ -135,15 +135,13 @@ class DBSession():
 
     @catch_disconnection
     def get_latest_specification(self, vm_id):
-        r = self.get('/servers/by_id/%s' % vm_id).json()
-        vm_name = r['artifact_uuid']
-        r2 = self.get('/servers/' + vm_name + '/specification').json()
-        return r2['cores'], r2['ram']
+        r = self.get('/servers/by_id/%s/specification' % vm_id).json()
+        return r['cores'], r['ram']
 
     @catch_disconnection
-    def set_specification(self, vm_name, cores, ram):
-        r = self.post('/servers/' + vm_name + '/specification',
-                      data={"vm_id":vm_name, "cores": cores, "ram": ram})
+    def set_specification(self, vm_id, cores, ram):
+        r = self.post('/servers/by_id/%s/specification' % vm_id,
+                      data={"cores": cores, "ram": ram})
 
     def kill(self):
         """
