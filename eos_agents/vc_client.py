@@ -66,13 +66,13 @@ class VCSession:
 
         return self._process_vc_response(r)
 
-    def _process_vc_response(self, content):
+    def _process_vc_response(self, r):
         self.last_status = "%i %s" % (r.status_code, r.reason)
         log.debug(r.status_code)
         log.debug(r.text)
 
         #Convert to XML.  If that fails, just let the exception propogate.
-        root = ET.fromstring(content)
+        root = ET.fromstring(r.content)
 
         #So we know root must at least be valid XML
         if 'id' in root.attrib:
