@@ -3,6 +3,8 @@ from time import sleep
 
 import logging
 log = logging.getLogger(__name__)
+#Used to suppress multiple warnings on failed DB connection:
+fail_flag = False
 
 class Daemon():
     """
@@ -17,24 +19,38 @@ class Daemon():
        if the API rejects the request
     4. The daemon is responsible for reporting things back to the user.  In fact,
        this is most of the functionality.
-    5. The daemon has to remember what messages it sent.  This is tricky.
+    5. The daemon would like to remember what messages it sent, even if it is restarted.
+       This is tricky.
 
     Since there is only one daemon in the system I will not attempt to abstract it.
     """
 
     def __init__(self):
 
-        # This doesn't really apply to the Daemon as it does not trigger by state:
-        # self.init_states = ( 'Stopped', 'Started' )
-        # self.success_state = 'Pre_Deboosting'
-        self.sleep_time = 5
+        # Only act on the VM if it is in one of these states...
+        self.init_states = set(( 'Stopped', 'Started' ))
+        # Putting the machine into this state automatically resets the
+        # specification.
+        self.success_state = 'Pre_Deboosting'
+
+        # Look for jobs every 15 seconds, seems sensible
+        self.sleep_time = 15
+
+        # If a machine is more that 2 hours late for deboost, don't touch it
+        self.ignore_after = 2 * 60
 
         # Warn the user with 24 hours to go and then at 1 hour.  This needs a lot of
         # coding to make it work, not least a way to remember who I warned about what.
         # Or do I just need to remember the time of the last message I sent??
         self.warn_at([24 * 60, 1 * 60])
 
+    def warn_at(self, mins_array):
+        # Need to work out how best to do this.
+        self._warn_at = mins_array
+
     def lurk(self, session=None, persist=True):
+
+        global fail_flag
 
         # As with agents:
         # Open DB Connection if none is provided.
@@ -45,19 +61,35 @@ class Daemon():
         while True:
 
             # Look for Machines in expired state
-            # TODO - implement this as a view, with agent permissions
-            exp = list(session.get_auto_deboost_items())
+            exp = ()
+            try:
+                exp = session.get_deboost_jobs(past=self.ignore_after, future=0)
+                fail_flag = False
+            except (db_client.ConnectionError, ValueError):
+                if not fail_flag:
+                    log.warning("Connection error on DB in Deboost Daemon." +
+                                (" Will keep trying!" if persist else ""))
+                    fail_flag = True
 
-            # Deal with all the machines in a loop, since there is a small possibility
-            # one might fail and we don't want to then ignore the others.
+            # Deal with all the machines in a loop, we probably only got one but you never
+            # know.
             for vm in exp:
 
                 try:
-                    session.do_deboost(vm)
+                    old_state = session.get_state(vm['artifact_id'])
+
+                    if old_state not in self.init_states:
+                        raise Exception("Refusing to de-boost a VM in state %s." % old_state)
+
+                    #Do it.
+                    self.session.set_state(self.vm_id, self.success_state)
 
                     log.info("De-Boosted VM %s" % vm)
 
-                    self.tell_user_vm_deboosted(vm)
+                    try:
+                        self.tell_user_vm_deboosted(vm)
+                    except:
+                        log.warning("Failed to inform user about the de-boost action.")
 
                 except Exception as e:
                     log.warning("VM %s did not deboost: %s" (v, e))
@@ -98,9 +130,11 @@ the system support address.
 
 
 deboost_daemon = Daemon()
+def lurk(*args, **kwargs):
+    deboost_daemon.lurk(*args, **kwargs)
 
 if __name__ == '__main__':
         #If the agents dwell() then maybe a daemon does this...
         logging.basicConfig(format="%(levelname)1.1s: %(message)s",
                             level = logging.DEBUG)
-        deboost_daemon.lurk()
+        lurk()

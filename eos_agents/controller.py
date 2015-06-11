@@ -16,21 +16,23 @@ import logging
 from sys import exit
 # Prior to python3.3 we could instead 'import time as clock'
 from time import sleep, monotonic as clock
+
+# Global state
+from eos_agents import db_client, load_all_agents, deboost_daemon
+jobs_running = {}
+all_agents = load_all_agents()
+
+log = logging.getLogger(__name__)
+#Used to suppress multiple warnings on failed DB connection:
+fail_flag = False
+
 # This requires the python3-setproctitle DEB pakage installed.
 # In Perl you just assign to $0, cos Perl is awesome.
 try:
     from setproctitle import setproctitle
 except ImportError:
+    log.warning("import of setproctitle module failed")
     setproctitle = lambda t: None
-
-# Global state
-from eos_agents import db_client, load_all_agents
-jobs_running = {}
-all_agents = load_all_agents()
-
-log = logging.getLogger(__name__)
-#Used to suppress multiple warnings on failed Db connection:
-fail_flag = False
 
 def main():
 
@@ -48,6 +50,7 @@ def main():
     parser.add_argument('-u', '--url',         help='Explicitly set the base URL for eos-db calls')
     parser.add_argument('-p', '--poll-interval', help='Set the poll interval in seconds', default="5")
     parser.add_argument('-v', '--verbose',     help='Show more messages', action='store_true')
+    parser.add_argument('-n', '--no-deboost',  help='Do not start the Deboost Daemon', action='store_true')
 
     args = parser.parse_args()
 
@@ -71,10 +74,7 @@ def main():
 
 
     ### Get a handle on the eos-db
-
-    # Could do this, but I want to process argv explicitly here
-    #db_session = db_client.get_default_db_session()
-
+    # We force the shared password bu allow the URL to default if not supplied.
     db_session = db_client.DBSession('agent', shared_password, args.url)
 
     if args.dry_run:
@@ -82,26 +82,37 @@ def main():
             log.info("Starting agent for %s" % a)
         exit()
 
-    ## Start the main loop
-    # TODO - allow clean exit on Ctrl+C
+    #Allow clean exit on SIGTERM
+    def interrupt(signum, frame):
+        raise InterruptedError("SIG %i" % signum)
+    signal.signal(signal.SIGTERM, interrupt)
+
+    #Start the Deboost Daemon
+    if not args.no_deboost:
+        log.info("Launching the Deboost Daemon")
+        start_job("Deboost Daemon", deboost_daemon.lurk,
+                  session=db_session, persist=True)
 
     poll_interval = int(args.poll_interval)
 
     log.info("Starting the agent herder with poll interval %i." % poll_interval)
+
     try:
         while True:
             for a in get_required_actions(db_session):
-                start_job("[eos-agents] %s" % a, all_agents[a].dwell,
+                start_job(a, all_agents[a].dwell,
                           session=db_session, persist=False)
 
             sleep_n_reap(poll_interval)
 
-    except KeyboardInterrupt:
-        #Catch this so that cleanup gets called.
-        pass
-
-    #Do this before quitting
-    reap_all_jobs()
+    finally:
+        #Always do this before quitting
+        #Signal the Deboost Daemon to stop - here's a nasty reverse dict lookup.
+        if jobs_running:
+            [ os.kill(pid, signal.SIGINT)
+              for pid, name in jobs_running.items()
+              if name == "Deboost Daemon"  ]
+            reap_all_jobs()
 
 def get_required_actions(db_session):
     """Queries the eos-db for what needs doing.  The eos-db should return a JSON dict
@@ -215,12 +226,19 @@ def start_job(name, func, *args, **kwargs):
         pid = os.fork()
         if pid == 0:
             #child.  If the job crashes we'll get a non-zero exit status
-            setproctitle(name)
-            func(*args, **kwargs)
+            setproctitle("[eos-agents] %s" % name)
+            #Child does not need to know about running jobs
+            jobs_running.clear()
+            try:
+                func(*args, **kwargs)
+            except KeyboardInterrupt:
+                #SIGINT is a normal way to exit a job.
+                pass
             exit(0)
         elif pid == -1:
             raise Error("Unable to fork job %s" % name)
         else:
+            #parent.  Log job and return.
             jobs_running[pid] = name
     return True
 

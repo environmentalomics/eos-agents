@@ -19,16 +19,6 @@ log = logging.getLogger(__name__)
 #debugging.
 logging.getLogger('requests').setLevel(logging.ERROR)
 
-def catch_disconnection(dbfunc):
-    """Ben called this 'safe_function' but clearly this was a typo as swallowing
-       an exception is not a 'safe' thing to do."""
-    def unsafe_function(*args):
-        try:
-            return dbfunc(*args)
-        except requests.exceptions.ConnectionError:
-            return None
-    return unsafe_function
-
 
 def get_default_db_session():
         """ Contructs a default DB session by looking at how the program was
@@ -74,28 +64,22 @@ class DBSession():
                    ( self.username, '*' * len(self.password), self.db_url ))
 
 
-    def get(self, *args):
-        newargs = ( self.db_url + args[0], ) + args[1:]
-        log.debug("GET from " + str(newargs))
-        result = requests.get(*newargs, auth=(self.username, self.password))
+    def get(self, url, **kwargs):
+        newurl = self.db_url + url
+        log.debug("GET from " + newurl + " with args " + str(kwargs))
+        result = requests.get(newurl, auth=(self.username, self.password), **kwargs)
         self.last_status = result.status_code
         #For my purposes I expect a 200 response every time
         if result.status_code not in range(200,207):
             raise ValueError("HTTP error response")
         return result
 
-    def post(self, *args):
-        newargs = ( self.db_url + args[0], ) + args[1:]
-        log.debug("POST to " + str(newargs))
-        result = requests.post(*newargs, auth=(self.username, self.password))
+    def post(self, url, **kwargs):
+        newurl = self.db_url + url
+        log.debug("POST to " + newurl + " with args " + str(kwargs))
+        result = requests.post(url, auth=(self.username, self.password), **kwargs)
         self.last_status = result.status_code
         return result
-
-    #FIXME - I suspect this connects to nothing in the DB
-    #FIXME 2 - I need a list back
-    @catch_disconnection
-    def get_auto_deboost_item(self):
-        return self.get('/states/boostexpired').json()
 
     def get_machine_state_counts(self):
         # TODO, call Ben's new API call here
@@ -105,15 +89,15 @@ class DBSession():
     def get_machines_in_state(self, state):
         return self.get("/states/" + state).json()
 
-    #FIXME - This should fail if the VM is not in a de-boostable state, just as it
-    # should when a manual deboost is tried on a machine not ready to be deboosted.
-    def do_deboost(self, vm_id):
-        """Puts the given machine into state PreDeboosting so that the agents
-           will come along and deboost it"""
-        r = self.post('/servers/%s/%s' % (vm_id, 'PreDeboosting'))
-        if r.status_code not in range(200,207):
-            raise Exception("Some Error???")
-        return r
+    #Gets deboost jobs
+    def get_deboost_jobs(self, **kwargs):
+        return self.get("/deboost_jobs", params=kwargs).json()
+
+    #Check the state of a server
+    def get_state(self, vm_id):
+        """Gets the current state of a VM.  Only the deboost_daemon actually uses this.
+        """
+        self.get("/servers/by_id/%s/state" % vm_id).json()
 
     #If this fails, the agent will just end up triggering again, and this should be fine,
     #as long as there is not a tight loop.
@@ -133,15 +117,9 @@ class DBSession():
         return (self.get('/servers/by_id/%s' % vm_id).json())['artifact_uuid']
 
 
-    @catch_disconnection
     def get_latest_specification(self, vm_id):
         r = self.get('/servers/by_id/%s/specification' % vm_id).json()
         return r['cores'], r['ram']
-
-    @catch_disconnection
-    def set_specification(self, vm_id, cores, ram):
-        r = self.post('/servers/by_id/%s/specification' % vm_id,
-                      data={"cores": cores, "ram": ram})
 
     def kill(self):
         """
