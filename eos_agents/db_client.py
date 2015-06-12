@@ -97,7 +97,7 @@ class DBSession():
     def get_state(self, vm_id):
         """Gets the current state of a VM.  Only the deboost_daemon actually uses this.
         """
-        self.get("/servers/by_id/%s/state" % vm_id).json()
+        return self.get("/servers/by_id/%s/state" % vm_id).json()
 
     #If this fails, the agent will just end up triggering again, and this should be fine,
     #as long as there is not a tight loop.

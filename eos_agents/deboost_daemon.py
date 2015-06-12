@@ -92,7 +92,7 @@ class Daemon():
                         log.warning("Failed to inform user about the de-boost action.")
 
                 except Exception as e:
-                    log.warning("VM %s did not deboost: %s" (v, e))
+                    log.warning("Server %s did not deboost: %s" (vm['arifact_id'], e))
 
             if persist:
                 sleep(self.sleep_time)
