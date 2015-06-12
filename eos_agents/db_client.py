@@ -77,7 +77,7 @@ class DBSession():
     def post(self, url, **kwargs):
         newurl = self.db_url + url
         log.debug("POST to " + newurl + " with args " + str(kwargs))
-        result = requests.post(url, auth=(self.username, self.password), **kwargs)
+        result = requests.post(newurl, auth=(self.username, self.password), **kwargs)
         self.last_status = result.status_code
         return result
 
