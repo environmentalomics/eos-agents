@@ -57,6 +57,7 @@ class Daemon():
         # Note that get_default_db_session examines sys.argv directly
         if session is None:
             session = db_client.get_default_db_session()
+        self.session = session
 
         while True:
 
@@ -82,7 +83,7 @@ class Daemon():
                         raise Exception("Refusing to de-boost a VM in state %s." % old_state)
 
                     #Do it.
-                    self.session.set_state(self.vm_id, self.success_state)
+                    session.set_state(self.vm_id, self.success_state)
 
                     log.info("De-Boosted VM %s" % vm)
 
@@ -92,7 +93,7 @@ class Daemon():
                         log.warning("Failed to inform user about the de-boost action.")
 
                 except Exception as e:
-                    log.warning("Server %s did not deboost: %s" (vm['arifact_id'], e))
+                    log.warning("Server %s did not deboost: %s" % (vm['artifact_id'], e))
 
             if persist:
                 sleep(self.sleep_time)
