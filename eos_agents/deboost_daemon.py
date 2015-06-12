@@ -61,7 +61,9 @@ class Daemon():
 
         while True:
 
-            # Look for Machines in expired state
+            # Look for Machines in expired state.  The API call returns an array of dicts:
+            # [dict(boost_remain=123, artifact_id=44, artifact_name='baz'), ...]
+            # where boost_remain is in seconds.
             exp = ()
             try:
                 exp = session.get_deboost_jobs(past=self.ignore_after, future=0)
@@ -75,15 +77,16 @@ class Daemon():
             # Deal with all the machines in a loop, we probably only got one but you never
             # know.
             for vm in exp:
+                vm_id = vm['artifact_id']
 
                 try:
-                    old_state = session.get_state(vm['artifact_id'])
+                    old_state = session.get_state(vm_id)
 
                     if old_state not in self.init_states:
-                        raise Exception("Refusing to de-boost a VM in state %s." % old_state)
+                        raise Exception("Refusing to de-boost a server in state %s." % old_state)
 
                     #Do it.
-                    session.set_state(self.vm_id, self.success_state)
+                    session.set_state(vm_id, self.success_state)
 
                     log.info("De-Boosted VM %s" % vm)
 
@@ -93,7 +96,7 @@ class Daemon():
                         log.warning("Failed to inform user about the de-boost action.")
 
                 except Exception as e:
-                    log.warning("Server %s did not deboost: %s" % (vm['artifact_id'], e))
+                    log.warning("Server %s did not deboost: %s" % (vm_id, e))
 
             if persist:
                 sleep(self.sleep_time)
