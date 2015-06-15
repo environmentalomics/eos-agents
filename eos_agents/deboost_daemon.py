@@ -80,8 +80,10 @@ class Daemon():
                 vm_id = vm['artifact_id']
 
                 try:
+                    #Back off if the server is in the middle of something.  Yes, this is racey but it
+                    #should be OK.  We're assuming the server will transition back to a stable state
+                    #very soon and then we'll go and Deboost it.
                     old_state = session.get_state(vm_id)
-
                     if old_state not in self.init_states:
                         raise Exception("Refusing to de-boost a server in state %s." % old_state)
 
