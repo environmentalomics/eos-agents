@@ -123,7 +123,10 @@ def get_required_actions(db_session):
     try:
         status_table = db_session.get_machine_state_counts()
         fail_flag = False
-    except db_client.ConnectionError:
+    #FIXME - I've been getting what look like some transitional 40x errors
+    #from the database.  Not sure why.  Original behaviour was to quit but
+    #I'm going to keep going and see if the problem goes away (ie. trap ValueError)
+    except (db_client.ConnectionError, ValueError):
         #In non-verbose mode suppress multiple connection error messages.
         (log.debug if fail_flag else log.warn)("Failed to connect to eos-db.")
         fail_flag = True
