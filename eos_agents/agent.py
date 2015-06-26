@@ -62,7 +62,7 @@ class Agent:
         """Keep asking VCD about the job until we get a result.
         """
         status = actions.get_status(job_id)
-        while status not in ['success', 'error', 'canceled', 'aborted']:
+        while status in ['queued', 'preRunning', 'running']:
             sleep(self.poll_time)
             status = actions.get_status(job_id)
         return status
