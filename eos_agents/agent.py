@@ -171,7 +171,9 @@ class Agent:
             log.debug(status + " on job " + str(job_id))  # Machine should now go to the failure_state
             raise JobException("%s - %s" % (self.serveruuid, status))
         else:
-            print("Error: Status=" + str(status))
+            #This should not be...
+            log.critical("Error: Unexpected Status=" + str(status))
+            raise JobException("%s - %s" % (self.serveruuid, status))
 
     def success(self):
         """Override this if the Agent needs to do something else on success
