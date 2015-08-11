@@ -12,7 +12,9 @@ def load_all_agents():
                 restart,
                 start,
                 start_boosted,
-                stop ,
+                stop,
+                provision,
+                post_provision
     )
 
     return all_agents

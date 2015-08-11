@@ -97,6 +97,7 @@ def main():
 
     log.info("Starting the agent herder with poll interval %i." % poll_interval)
 
+    # This is the main loop!
     try:
         while True:
             for a in get_required_actions(db_session):
