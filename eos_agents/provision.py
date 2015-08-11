@@ -18,9 +18,14 @@ class Provision_Agent(agent.Agent):
         #Make a call to servers/by_id/{self.vm_id}
         vm_info = self.session.server_data(self.vm_id)
         # New action to instantiate a VM
-        self.do_action(actions.provision_vm, vm_info)
+        vapp_uuid = actions.provision_vm(vm_info)
 
-        
+        # Retrieve the vapp_id and the primary ip address
+        ip_addr = self.do_action
+
+        # Send these back to the database
+        self.session.update_server_info(['vapp_id' : vapp_id, 'ip_addr' : ip_addr])
+
         #... ['artifact_name'], vm_info['template_id'], vm_info['descripti)
 
 my_agent = Provision_Agent()
